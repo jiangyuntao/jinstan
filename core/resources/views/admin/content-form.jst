@@ -1,0 +1,362 @@
+{extends 'layout.jst'}
+{block content}
+<form class="flex items-center gap-3" method="get">
+    <label class="text-sm font-medium" for="content-locale">{=t('内容语言')}</label>
+    <select id="content-locale" name="locale" onchange="this.form.submit()">{foreach $form['locales'] as $code => $label}<option value="{$code}" selected="{$code === $form['locale']}">{$label} ({$code})</option>{/foreach}</select>
+</form>
+{if $error}<p class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">{$error}</p>{/if}
+{if $sourceReference !== null}
+<aside class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-5" aria-label="{=t('原文参考')}">
+    <div class="flex flex-wrap items-center justify-between gap-3"><h2 class="font-semibold text-amber-950">{=t('原文参考')}</h2><span class="rounded-full bg-white px-2.5 py-1 text-xs text-amber-800">{$sourceReference['localeName']} ({$sourceReference['locale']})</span></div>
+    <dl class="mt-4 grid gap-4 md:grid-cols-2"><div><dt class="text-xs font-semibold text-amber-800">{=t('标题')}</dt><dd class="mt-1 whitespace-pre-wrap text-slate-900">{$sourceReference['title']}</dd></div><div><dt class="text-xs font-semibold text-amber-800">{=t('content.slug')}</dt><dd class="mt-1 font-mono text-slate-900">{$sourceReference['slug']}</dd></div>{foreach $sourceReference['fields'] as $sourceField}<div class="md:col-span-2">{if $sourceField['collapsible']}<details class="rounded-lg border border-amber-200 bg-white/70"><summary class="cursor-pointer px-4 py-3 text-sm font-semibold text-amber-900">{$sourceField['label']}<span class="ml-2 font-normal text-amber-700">{=t('source.characters', ['count' => $sourceField['length']])}</span></summary><div class="max-h-96 overflow-auto border-t border-amber-100 px-4 py-3 whitespace-pre-wrap text-slate-900">{$sourceField['value']}</div></details>{else}<dt class="text-xs font-semibold text-amber-800">{$sourceField['label']}</dt><dd class="mt-1 whitespace-pre-wrap text-slate-900">{$sourceField['value']}</dd>{/if}</div>{/foreach}</dl>
+    <p class="mt-4 text-sm text-amber-800">{=t('下方填写的是目标语言版本，保存不会修改原文。')}</p>
+</aside>
+{/if}
+<div class="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+    <form class="space-y-6" method="post" action="{$form['action']}" enctype="multipart/form-data" x-data="{ tab: 'content' }">
+        <input type="hidden" name="_token" value="{$form['csrfToken']}">
+        <input type="hidden" name="locale" value="{$form['locale']}">
+        <div class="flex gap-2 border-b" role="tablist" aria-label="{=t('内容编辑')}">
+            {foreach ['content' => t('内容'), 'presentation' => t('前台展示')] as $key => $label}<button type="button" class="rounded-t-lg px-4 py-3" role="tab" id="content-tab-{$key}" aria-controls="content-panel-{$key}" :aria-selected="tab === '{$key}'" :class="tab === '{$key}' ? 'bg-slate-100 text-blue-700' : 'text-slate-500'" @click="tab = '{$key}'">{$label}</button>{/foreach}
+        </div>
+        <section class="space-y-6" id="content-panel-content" role="tabpanel" aria-labelledby="content-tab-content" x-show="tab === 'content'" @invalid.capture="tab = 'content'">
+        {include 'fields/text.jst', field: ['name' => 'title', 'inputName' => 'title', 'label' => t('标题'), 'value' => $form['title'], 'required' => true]}
+        {include 'fields/text.jst', field: ['name' => 'slug', 'inputName' => 'slug', 'label' => t('content.slug'), 'value' => $form['slug'], 'required' => true, 'help' => t('content.slug_help')]}
+        {if $form['hierarchical']}{include 'fields/parent-content.jst', field: ['name' => 'parent_id', 'inputName' => 'parent_id', 'label' => t('content.parent'), 'value' => $form['parentId'], 'options' => $form['parents'], 'searchUrl' => $form['parentSearchUrl'], 'help' => t('content.parent_help')]}{/if}
+        {foreach ($form['taxonomyGroups'] ?? []) as $group}
+            {include 'partials/content-taxonomy.jst', group: $group}
+        {/foreach}
+        {foreach $form['fields'] as $field}
+            {include $field['view'], field: $field}
+        {/foreach}
+        </section>
+        <section class="space-y-6" id="content-panel-presentation" role="tabpanel" aria-labelledby="content-tab-presentation" x-show="tab === 'presentation'" @invalid.capture="tab = 'presentation'">
+        <div><label class="block font-medium" for="content-template">{=t('详情模板')}</label><select class="mt-2 block w-full" id="content-template" name="template">
+            {var $selectedTemplate = $form['template'] ?? ''}
+            <option value="" selected="{$selectedTemplate === ''}">{=t('继承内容类型设置')}</option>
+            {if $selectedTemplate !== '' && !isset(($form['templates'] ?? [])[$selectedTemplate])}<option value="" selected>{=t('模板不可用，恢复继承内容类型设置')}</option>{/if}
+            {foreach ($form['templates'] ?? []) as $handle => $label}<option value="{$handle}" selected="{$selectedTemplate === $handle}">{$label}</option>{/foreach}
+        </select><p class="mt-2 text-sm text-slate-500">{=t('仅覆盖当前内容的详情展示。完整 HTML 页面由正文直接输出。')}</p></div>
+        </section>
+        {include 'fields/switch.jst', field: ['name' => 'published', 'inputName' => 'published', 'label' => t('发布状态'), 'value' => $form['published'], 'onLabel' => t('已发布'), 'offLabel' => t('草稿'), 'help' => t('开启后内容会出现在网站前台。')]}
+        <div class="flex items-center gap-3 border-t border-slate-100 pt-5">
+            <button class="admin-button px-4 py-2.5" type="submit">{=t('保存')}</button>
+            <a class="rounded-lg px-4 py-2.5 font-medium text-slate-600 hover:bg-slate-100" href="{route('admin.content.index', ['type' => $form['typeHandle']])}">{=t('取消')}</a>
+        </div>
+    </form>
+    {if $form['deleteAction']}
+        <form class="mt-6 border-t border-slate-100 pt-5" method="post" action="{$form['deleteAction']}" data-confirm-title="{=t('删除这条内容？')}" data-confirm-message="{=t('内容及其翻译和关联关系将被永久删除，无法撤销。')}" data-confirm-action="{=t('删除内容')}">
+            <input type="hidden" name="_token" value="{$form['csrfToken']}">
+            <button class="rounded-lg px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50" type="submit">{=t('删除内容')}</button>
+        </form>
+    {/if}
+</div>
+{/block}
+
+{block scripts}
+<script>
+const taxonomyMessages = {
+    searching: {=t('taxonomy.searching')},
+    limit: {=t('taxonomy.search_limit')},
+    initial: {=t('taxonomy.search_default')},
+    empty: {=t('taxonomy.search_empty')},
+    failed: {=t('taxonomy.search_failed')},
+};
+</script>
+<script n:syntax="off">
+document.addEventListener('alpine:init', () => {
+    Alpine.data('imageUpload', (initial, multiple) => ({
+        items: initial.map((item, index) => ({ ...item, file: null, key: `saved-${index}-${item.path}` })),
+        removed: false,
+        draggedIndex: null,
+        crop: { open: false, index: -1, dragging: false, mode: 'new', startX: 0, startY: 0, x: 0, y: 0, width: 0, height: 0 },
+        select(event) {
+            const selected = Array.from(event.target.files).map((file) => ({
+                url: URL.createObjectURL(file), file, path: null, key: `new-${Date.now()}-${Math.random()}`,
+            }));
+            if (!multiple) this.release(this.items);
+            this.items = multiple ? [...this.items, ...selected] : selected;
+            this.removed = false;
+            this.syncFiles();
+        },
+        remove(index) {
+            this.release([this.items[index]]);
+            this.items.splice(index, 1);
+            this.removed = !multiple && this.items.length === 0;
+            this.syncFiles();
+        },
+        dragStart(index, event) {
+            this.draggedIndex = index;
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', String(index));
+            event.currentTarget.style.opacity = '.5';
+        },
+        dragOver(index) {
+            if (this.draggedIndex === null || this.draggedIndex === index) return;
+            const [item] = this.items.splice(this.draggedIndex, 1);
+            this.items.splice(index, 0, item);
+            this.draggedIndex = index;
+            this.items = [...this.items];
+        },
+        drop(index) {
+            if (this.draggedIndex === null) return;
+            this.draggedIndex = index;
+            this.syncFiles();
+        },
+        dragEnd(event) {
+            event.currentTarget.style.opacity = '1';
+            this.draggedIndex = null;
+            this.syncFiles();
+        },
+        async rotate(index, degrees) {
+            const item = this.items[index];
+            if (!item) return;
+            const image = new Image();
+            image.src = item.url;
+            await image.decode();
+            const canvas = document.createElement('canvas');
+            const sideways = Math.abs(degrees) === 90;
+            canvas.width = sideways ? image.naturalHeight : image.naturalWidth;
+            canvas.height = sideways ? image.naturalWidth : image.naturalHeight;
+            const context = canvas.getContext('2d');
+            context.translate(canvas.width / 2, canvas.height / 2);
+            context.rotate(degrees * Math.PI / 180);
+            context.drawImage(image, -image.naturalWidth / 2, -image.naturalHeight / 2);
+            const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.92));
+            if (!blob) return;
+            const file = new File([blob], 'edited-image.webp', { type: 'image/webp' });
+            this.release([item]);
+            this.items[index] = { url: URL.createObjectURL(file), file, path: null, key: `edited-${Date.now()}-${Math.random()}` };
+            this.items = [...this.items];
+            this.removed = false;
+            this.syncFiles();
+        },
+        syncFiles() {
+            const transfer = new DataTransfer();
+            this.items.forEach((item) => { if (item.file) transfer.items.add(item.file); });
+            this.$refs.input.files = transfer.files;
+        },
+        release(items) {
+            items.forEach((item) => { if (item?.url?.startsWith('blob:')) URL.revokeObjectURL(item.url); });
+        },
+        async openCrop(index) {
+            const item = this.items[index];
+            if (!item) return;
+            const image = new Image();
+            image.src = item.url;
+            await image.decode();
+            this._cropImage = image;
+            this.crop = { open: true, index, dragging: false, mode: 'new', startX: 0, startY: 0, x: 0, y: 0, width: 0, height: 0 };
+            await this.$nextTick();
+            const canvas = this.$refs.cropCanvas;
+            const scale = Math.min(1, 760 / image.naturalWidth, 460 / image.naturalHeight);
+            canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+            canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+            this.crop.x = 0;
+            this.crop.y = 0;
+            this.crop.width = 0;
+            this.crop.height = 0;
+            this.drawCrop();
+        },
+        closeCrop() {
+            this.crop.open = false;
+            this.crop.dragging = false;
+        },
+        cropPoint(event) {
+            const canvas = this.$refs.cropCanvas;
+            const bounds = canvas.getBoundingClientRect();
+            return {
+                x: Math.max(0, Math.min(canvas.width, (event.clientX - bounds.left) * canvas.width / bounds.width)),
+                y: Math.max(0, Math.min(canvas.height, (event.clientY - bounds.top) * canvas.height / bounds.height)),
+            };
+        },
+        cropStart(event) {
+            const point = this.cropPoint(event);
+            this.crop.dragging = true;
+            this.crop.startX = point.x;
+            this.crop.startY = point.y;
+            this.crop.origin = { x: this.crop.x, y: this.crop.y, width: this.crop.width, height: this.crop.height };
+            const threshold = 12;
+            const nearLeft = Math.abs(point.x - this.crop.x) <= threshold;
+            const nearRight = Math.abs(point.x - this.crop.x - this.crop.width) <= threshold;
+            const nearTop = Math.abs(point.y - this.crop.y) <= threshold;
+            const nearBottom = Math.abs(point.y - this.crop.y - this.crop.height) <= threshold;
+            const withinX = point.x >= this.crop.x - threshold && point.x <= this.crop.x + this.crop.width + threshold;
+            const withinY = point.y >= this.crop.y - threshold && point.y <= this.crop.y + this.crop.height + threshold;
+            if (withinY && nearLeft) this.crop.mode = nearTop ? 'nw' : (nearBottom ? 'sw' : 'w');
+            else if (withinY && nearRight) this.crop.mode = nearTop ? 'ne' : (nearBottom ? 'se' : 'e');
+            else if (withinX && nearTop) this.crop.mode = 'n';
+            else if (withinX && nearBottom) this.crop.mode = 's';
+            else if (point.x > this.crop.x && point.x < this.crop.x + this.crop.width && point.y > this.crop.y && point.y < this.crop.y + this.crop.height) this.crop.mode = 'move';
+            else {
+                this.crop.mode = 'new';
+                this.crop.x = point.x;
+                this.crop.y = point.y;
+                this.crop.width = 0;
+                this.crop.height = 0;
+            }
+            event.currentTarget.setPointerCapture(event.pointerId);
+            this.drawCrop();
+        },
+        cropMove(event) {
+            if (!this.crop.dragging) return;
+            const point = this.cropPoint(event);
+            const canvas = this.$refs.cropCanvas;
+            const origin = this.crop.origin;
+            if (this.crop.mode === 'new') {
+                this.crop.x = Math.min(this.crop.startX, point.x);
+                this.crop.y = Math.min(this.crop.startY, point.y);
+                this.crop.width = Math.abs(point.x - this.crop.startX);
+                this.crop.height = Math.abs(point.y - this.crop.startY);
+            } else if (this.crop.mode === 'move') {
+                this.crop.x = Math.max(0, Math.min(canvas.width - origin.width, origin.x + point.x - this.crop.startX));
+                this.crop.y = Math.max(0, Math.min(canvas.height - origin.height, origin.y + point.y - this.crop.startY));
+            } else {
+                let left = origin.x;
+                let right = origin.x + origin.width;
+                let top = origin.y;
+                let bottom = origin.y + origin.height;
+                if (this.crop.mode.includes('w')) left = Math.min(point.x, right - 4);
+                if (this.crop.mode.includes('e')) right = Math.max(point.x, left + 4);
+                if (this.crop.mode.includes('n')) top = Math.min(point.y, bottom - 4);
+                if (this.crop.mode.includes('s')) bottom = Math.max(point.y, top + 4);
+                this.crop.x = Math.max(0, left);
+                this.crop.y = Math.max(0, top);
+                this.crop.width = Math.min(canvas.width, right) - this.crop.x;
+                this.crop.height = Math.min(canvas.height, bottom) - this.crop.y;
+            }
+            this.drawCrop();
+        },
+        cropEnd(event) {
+            if (!this.crop.dragging) return;
+            this.cropMove(event);
+            this.crop.dragging = false;
+        },
+        drawCrop() {
+            const canvas = this.$refs.cropCanvas;
+            const context = canvas?.getContext('2d');
+            if (!context || !this._cropImage) return;
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.drawImage(this._cropImage, 0, 0, canvas.width, canvas.height);
+            if (this.crop.width <= 1 || this.crop.height <= 1) return;
+            context.fillStyle = 'rgba(15, 23, 42, .58)';
+            context.fillRect(0, 0, canvas.width, this.crop.y);
+            context.fillRect(0, this.crop.y, this.crop.x, this.crop.height);
+            context.fillRect(this.crop.x + this.crop.width, this.crop.y, canvas.width - this.crop.x - this.crop.width, this.crop.height);
+            context.fillRect(0, this.crop.y + this.crop.height, canvas.width, canvas.height - this.crop.y - this.crop.height);
+            context.strokeStyle = '#fff';
+            context.lineWidth = 2;
+            context.strokeRect(this.crop.x, this.crop.y, this.crop.width, this.crop.height);
+            context.fillStyle = '#fff';
+            const handles = [
+                [this.crop.x, this.crop.y], [this.crop.x + this.crop.width / 2, this.crop.y], [this.crop.x + this.crop.width, this.crop.y],
+                [this.crop.x, this.crop.y + this.crop.height / 2], [this.crop.x + this.crop.width, this.crop.y + this.crop.height / 2],
+                [this.crop.x, this.crop.y + this.crop.height], [this.crop.x + this.crop.width / 2, this.crop.y + this.crop.height], [this.crop.x + this.crop.width, this.crop.y + this.crop.height],
+            ];
+            handles.forEach(([x, y]) => context.fillRect(x - 4, y - 4, 8, 8));
+        },
+        async applyCrop() {
+            if (!this._cropImage || this.crop.width < 2 || this.crop.height < 2) return;
+            const sourceX = Math.round(this.crop.x * this._cropImage.naturalWidth / this.$refs.cropCanvas.width);
+            const sourceY = Math.round(this.crop.y * this._cropImage.naturalHeight / this.$refs.cropCanvas.height);
+            const sourceWidth = Math.max(1, Math.round(this.crop.width * this._cropImage.naturalWidth / this.$refs.cropCanvas.width));
+            const sourceHeight = Math.max(1, Math.round(this.crop.height * this._cropImage.naturalHeight / this.$refs.cropCanvas.height));
+            const canvas = document.createElement('canvas');
+            canvas.width = sourceWidth;
+            canvas.height = sourceHeight;
+            canvas.getContext('2d').drawImage(this._cropImage, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, sourceWidth, sourceHeight);
+            const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.92));
+            if (!blob) return;
+            const file = new File([blob], 'cropped-image.webp', { type: 'image/webp' });
+            const oldItem = this.items[this.crop.index];
+            this.release([oldItem]);
+            this.items[this.crop.index] = { url: URL.createObjectURL(file), file, path: null, key: `cropped-${Date.now()}-${Math.random()}` };
+            this.items = [...this.items];
+            this.removed = false;
+            this.syncFiles();
+            this.closeCrop();
+        },
+    }));
+    Alpine.data('skuRows', (initial) => ({
+        rows: initial.map((row, index) => ({ ...row, key: `${Date.now()}-${index}` })),
+        add() {
+            this.rows.push({ title: '', code: '', stock: 0, price: 0, key: `${Date.now()}-${Math.random()}` });
+        },
+        remove(index) {
+            if (this.rows.length > 1) this.rows.splice(index, 1);
+        },
+    }));
+    Alpine.data('taxonomyPicker', (config) => ({
+        selected: config.items, multiple: config.multiple, items: [], query: '', message: '', revision: 0, open: false,
+        toggle() {
+            this.open = !this.open;
+            if (this.open) {
+                this.search();
+                this.$nextTick(() => this.$refs.search.focus());
+            }
+        },
+        async search() {
+            const revision = ++this.revision;
+            this.items = [];
+            this.message = taxonomyMessages.searching;
+            try {
+                const response = await fetch(config.url + '?q=' + encodeURIComponent(this.query.trim()), { headers: { Accept: 'application/json' } });
+                if (!response.ok) throw new Error();
+                const data = await response.json();
+                if (revision !== this.revision) return;
+                this.items = data.items;
+                this.message = this.items.length ? (this.query.trim() ? taxonomyMessages.limit : taxonomyMessages.initial) : taxonomyMessages.empty;
+            } catch (error) {
+                if (revision === this.revision) this.message = taxonomyMessages.failed;
+            }
+        },
+        choose(item) {
+            if (!this.selected.some(value => Number(value.id) === Number(item.id))) {
+                this.selected = this.multiple ? [...this.selected, item] : [item];
+            }
+            this.query = '';
+            this.items = [];
+            this.message = '';
+            this.open = false;
+            ++this.revision;
+        },
+        remove(id) { this.selected = this.selected.filter(item => item.id !== id); },
+    }));
+    Alpine.data('parentContentPicker', (initial, searchUrl) => ({
+        open: false,
+        query: '',
+        selectedId: initial.id || '',
+        selectedLabel: initial.label || '',
+        items: [],
+        loading: false,
+        search() {
+            if (this.query.trim() === '') {
+                this.items = [];
+                return;
+            }
+            this.loading = true;
+            const url = new URL(searchUrl, window.location.origin);
+            url.searchParams.set('q', this.query.trim());
+            fetch(url, { headers: { Accept: 'application/json' } })
+                .then((response) => response.ok ? response.json() : { items: [] })
+                .then((payload) => { this.items = Array.isArray(payload.items) ? payload.items : []; })
+                .catch(() => { this.items = []; })
+                .finally(() => { this.loading = false; });
+        },
+        select(item) {
+            this.selectedId = item.id;
+            this.selectedLabel = item.title;
+            this.query = '';
+            this.items = [];
+            this.open = false;
+        },
+        clear() {
+            this.selectedId = '';
+            this.selectedLabel = '';
+            this.query = '';
+            this.items = [];
+        },
+    }));
+});
+</script>
+{/block}

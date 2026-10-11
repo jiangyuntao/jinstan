@@ -1,0 +1,118 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  sqlite:
+    name: PHP ${{ matrix.php }} / SQLite
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.3', '8.4']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: pdo_sqlite
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist
+      - run: core/vendor/bin/phpunit
+      - run: core/vendor/bin/php-cs-fixer fix --dry-run --diff --sequential
+
+  release:
+    name: Security and release package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_sqlite, zip
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: composer install --no-interaction --prefer-dist
+      - run: composer audit --locked
+      - run: composer docs
+      - run: npm ci --no-fund
+      - run: npm audit --omit=dev
+      - run: php build.php
+      - run: php scripts/verify-release.php dist/jinstan-1.0.0.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jinstan-1.0.0
+          path: |
+            dist/jinstan-1.0.0.zip
+            dist/jinstan-1.0.0.zip.sha256
+          if-no-files-found: error
+
+  database:
+    name: PHP 8.3 / ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: MySQL 8.4
+            image: mysql:8.4
+            port: 3306
+            mysql_dsn: mysql:host=127.0.0.1;port=3306;dbname=jinstan_test
+            pgsql_dsn: ''
+            health: mysqladmin ping --host=127.0.0.1 --user=root --password=test
+          - name: MariaDB 11.4
+            image: mariadb:11.4
+            port: 3306
+            mysql_dsn: mysql:host=127.0.0.1;port=3306;dbname=jinstan_test
+            pgsql_dsn: ''
+            health: healthcheck.sh --connect --innodb_initialized
+          - name: PostgreSQL 17
+            image: postgres:17-alpine
+            port: 5432
+            mysql_dsn: ''
+            pgsql_dsn: pgsql:host=127.0.0.1;port=5432;dbname=jinstan_test
+            health: pg_isready --username=postgres --dbname=jinstan_test
+    services:
+      database:
+        image: ${{ matrix.image }}
+        env:
+          MYSQL_ROOT_PASSWORD: test
+          MYSQL_DATABASE: jinstan_test
+          MARIADB_ROOT_PASSWORD: test
+          MARIADB_DATABASE: jinstan_test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: jinstan_test
+        ports:
+          - ${{ matrix.port }}:${{ matrix.port }}
+        options: >-
+          --health-cmd "${{ matrix.health }}"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      JINSTAN_TEST_MYSQL_DSN: ${{ matrix.mysql_dsn }}
+      JINSTAN_TEST_MYSQL_USER: root
+      JINSTAN_TEST_MYSQL_PASSWORD: test
+      JINSTAN_TEST_PGSQL_DSN: ${{ matrix.pgsql_dsn }}
+      JINSTAN_TEST_PGSQL_USER: postgres
+      JINSTAN_TEST_PGSQL_PASSWORD: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql, pdo_pgsql
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist
+      - name: Run cross-database integration tests
+        run: >-
+          core/vendor/bin/phpunit
+          tests/Integration/ContentListingDatabaseTest.php
+          tests/Integration/TaxonomyDatabaseTest.php

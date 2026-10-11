@@ -1,0 +1,150 @@
+# 环境变量与本机配置
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.local
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux 桌面与文件管理器
+.directory
+.Trash-*
+.nfs*
+
+# JetBrains IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Visual Studio Code / Visual Studio
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.example.json
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Vim / Neovim / Emacs
+*.swp
+*.swo
+*.swn
+*~
+.vim/
+.nvim/
+Session.vim
+.netrwhist
+tags
+TAGS
+.#*
+\#*\#
+
+# Sublime Text / Zed / Fleet
+*.sublime-workspace
+.zed/
+.fleet/
+
+# PHP / Composer
+/vendor/
+/core/vendor/
+.phpunit.result.cache
+.php-cs-fixer.cache
+.php-cs-fixer.php.cache
+coverage/
+.phpunit.cache/
+
+# Node.js / npm / pnpm / Yarn / Bun
+/node_modules/
+.npm/
+.pnpm-store/
+.yarn/cache/
+.yarn/install-state.gz
+.yarn/unplugged/
+.pnp.*
+bun.lockb
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.venv/
+venv/
+
+# Java / Kotlin / Gradle
+.gradle/
+build/
+*.class
+
+# .NET
+bin/
+obj/
+*.userprefs
+
+# Rust / Go
+target/
+vendor-go/
+
+# Ruby
+.bundle/
+.ruby-lsp/
+
+# 通用测试、分析与临时产物
+*.log
+*.tmp
+*.temp
+*.cache
+*.pid
+*.seed
+.cache/
+.coverage
+.nyc_output/
+junit.xml
+
+# 发布产物
+/dist/
+
+# Jinstan 运行期数据
+/storage/installed.php
+/storage/cache/*
+!/storage/cache/.gitkeep
+/storage/database/*
+!/storage/database/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/backups/*
+!/storage/backups/.gitkeep
+/storage/updates/*
+!/storage/updates/.gitkeep
+/storage/config/*
+!/storage/config/.gitkeep
+/storage/content-attachments/*
+!/storage/content-attachments/.gitkeep
+/storage/media/*
+!/storage/media/.gitkeep

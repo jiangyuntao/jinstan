@@ -1,0 +1,5 @@
+{extends 'layout.jst'}
+{block headerActions}<form method="post" action="{route('admin.cache.clear')}" data-confirm-title="{=t('清除全部缓存？')}" data-confirm-message="{=t('全部缓存文件将被清除，后续请求会重新生成缓存。')}" data-confirm-action="{=t('清除缓存')}"><input name="_token" type="hidden" value="{$csrfToken}"><button class="admin-button inline-flex items-center gap-2 px-4 py-2.5" type="submit"><i class="ti ti-trash" aria-hidden="true"></i>{=t('清理缓存')}</button></form>{/block}
+{block content}
+<p class="text-sm text-slate-500">{=t('清理编译缓存，检查最近的运行日志。')}</p><pre class="mt-6 max-h-[32rem] overflow-auto rounded-xl bg-slate-950 p-5 text-xs leading-6 text-slate-200">{$log}</pre>
+{/block}

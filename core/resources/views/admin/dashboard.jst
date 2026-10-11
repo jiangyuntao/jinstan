@@ -1,0 +1,88 @@
+{extends 'layout.jst'}
+{block content}
+<div>
+    <p class="text-xs font-medium tracking-widest text-slate-500">{=t('admin.brand_upper')}</p>
+    <p class="mt-2 text-slate-500">{=t('管理内容、站点设置与系统状态。')}</p>
+</div>
+
+{var $cardCount = count($cards)}
+{var $cardColumns = $cardCount <= 5 ? $cardCount : min(5, (int) ceil($cardCount / 2))}
+<section class="dashboard-content-grid mt-8 grid gap-4 sm:grid-cols-2" style="--dashboard-columns: {$cardColumns}" aria-label="{=t('主要内容')}">
+    {foreach $cards as $card}
+        <a class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm" href="{$card['url']}">
+            <p class="text-sm text-slate-500">{$card['label']}</p>
+            <p class="mt-2 text-3xl font-semibold">{$card['value']}</p>
+            <p class="mt-4 text-sm text-slate-500">{=t('查看详情 →')}</p>
+        </a>
+    {/foreach}
+</section>
+
+<section class="mt-8 grid gap-6 xl:grid-cols-2" aria-label="{=t('内容图表')}">
+    <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 class="text-lg font-semibold">{=t('内容类型分布')}</h2>
+        <p class="mt-1 text-sm text-slate-500">{=t('各主要 Content Type 的内容数量。')}</p>
+        <div class="mt-5 h-48"><canvas id="content-type-chart" role="img" aria-label="{=t('内容类型分布图表')}"></canvas></div>
+    </div>
+    <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 class="text-lg font-semibold">{=t('发布状态')}</h2>
+        <p class="mt-1 text-sm text-slate-500">{=t('主要内容中的已发布与草稿数量。')}</p>
+        <div class="mx-auto mt-5 max-w-sm" style="height: 150px"><canvas id="content-status-chart" role="img" aria-label="{=t('发布状态分布图表')}"></canvas></div>
+    </div>
+</section>
+
+<section class="mt-8 grid gap-6 xl:grid-cols-2">
+    <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 class="text-lg font-semibold">{=t('系统信息')}</h2>
+        <dl class="mt-5 grid gap-4 sm:grid-cols-2">
+            {foreach $systemItems as $item}
+                <div class="rounded-lg bg-slate-50 px-4 py-3"><dt class="text-xs text-slate-500">{$item['label']}</dt><dd class="mt-1 text-sm font-semibold">{$item['value']}</dd></div>
+            {/foreach}
+        </dl>
+        <h3 class="mt-10 border-t pt-6 text-sm font-semibold">{=t('第三方库版本')}</h3>
+        <dl class="mt-4 grid gap-x-8 gap-y-3 sm:grid-cols-2">
+            {foreach $dependencyItems as $item}
+                <div class="flex items-center justify-between gap-4 rounded-lg bg-slate-50 px-4 py-3"><dt class="min-w-0 truncate text-xs"><a class="text-blue-600 hover:text-blue-700 hover:underline" href="{$item['url']}" target="_blank" rel="noopener noreferrer" title="{$item['label']}">{$item['label']}</a></dt><dd class="shrink-0 text-xs font-medium">{$item['value']}</dd></div>
+            {/foreach}
+        </dl>
+    </div>
+    <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="flex items-center justify-between gap-4"><h2 class="text-lg font-semibold">{=t('数据库信息')}</h2><a class="text-sm font-medium text-blue-600 hover:text-blue-700" href="{route('admin.database.index')}">{=t('数据库工具 →')}</a></div>
+        <dl class="mt-4 divide-y">
+            {foreach $databaseItems as $item}
+                <div class="flex items-center justify-between gap-4 py-3"><dt class="text-sm text-slate-500">{$item['label']}</dt><dd class="text-sm font-medium">{$item['value']}</dd></div>
+            {/foreach}
+        </dl>
+    </div>
+</section>
+
+{/block}
+
+{block scripts}
+<script src="{=coreAsset('charts.js')}"></script>
+<script id="dashboard-chart-data" type="application/json">{$chartDataJson|noescape}</script>
+<script n:syntax="off">
+    const dashboardChartData = JSON.parse(document.getElementById('dashboard-chart-data').textContent);
+    const dashboardChartFont = getComputedStyle(document.body).fontFamily;
+    Chart.defaults.font.family = dashboardChartFont;
+    Chart.defaults.color = '#6b7684';
+
+    const contentTypeColors = ['#3182f6', '#7c3aed', '#14b8a6', '#f59e0b', '#ec4899', '#64748b'];
+    new Chart(document.getElementById('content-type-chart'), {
+        type: 'bar',
+        data: {
+            labels: dashboardChartData.content.labels,
+            datasets: [{ data: dashboardChartData.content.values, backgroundColor: dashboardChartData.content.values.map((_, index) => contentTypeColors[index % contentTypeColors.length]), borderRadius: 8, maxBarThickness: 54 }],
+        },
+        options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { precision: 0 } } } },
+    });
+
+    new Chart(document.getElementById('content-status-chart'), {
+        type: 'doughnut',
+        data: {
+            labels: dashboardChartData.status.labels,
+            datasets: [{ data: dashboardChartData.status.values, backgroundColor: ['#3182f6', '#dbe4ee'], borderWidth: 0, hoverOffset: 4 }],
+        },
+        options: { maintainAspectRatio: false, cutout: '68%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true, padding: 20 } } } },
+    });
+</script>
+{/block}

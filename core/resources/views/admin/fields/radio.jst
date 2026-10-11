@@ -1,0 +1,5 @@
+<fieldset>
+    <legend class="text-sm font-semibold text-slate-800">{$field['label']}{if $field['required']}<span class="ml-1 text-red-500" aria-hidden="true">*</span>{/if}</legend>
+    <div class="mt-2 grid gap-2 sm:grid-cols-2">{foreach $field['options'] as $value => $label}<label class="admin-choice text-sm font-medium"><input name="{$field['inputName']}" type="radio" value="{$value}"{if (string) $field['value'] === (string) $value} checked{/if}{if $field['required']} required{/if}><span>{$label}</span></label>{/foreach}</div>
+    {ifset $field['help']}<p class="mt-2 text-xs text-slate-500">{$field['help']}</p>{/ifset}
+</fieldset>

@@ -1,0 +1,3 @@
+{foreach $items as $item}
+<li{if $item['children']} class="has-children"{/if}><a href="{$item['url']}" target="{$item['target']}"{if $item['target'] === '_blank'} rel="noopener noreferrer"{/if}>{$item['label']}</a>{if $item['children']}<ul>{include 'navigation-menu-items.jst', items: $item['children']}</ul>{/if}</li>
+{/foreach}

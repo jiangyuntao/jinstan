@@ -1,0 +1,63 @@
+{extends 'layout.jst'}
+{block headerActions}<a class="admin-button inline-flex items-center px-4 py-2.5" href="{route('admin.taxonomies.edit', ['handle' => $selected])}">{=t('词汇表设置')}</a><a class="admin-button inline-flex items-center gap-2 px-4 py-2.5" href="{route('admin.taxonomy-terms.create', ['handle' => $selected])}?{$context}"><i class="ti ti-plus" aria-hidden="true"></i>{=t('新增条目')}</a>{/block}
+{block content}
+<div class="flex flex-wrap items-center justify-between gap-4"><p class="text-sm text-slate-500">{=t('taxonomy.terms_description', ['name' => $selectedLabel])}</p><form class="flex items-center gap-3" method="get"><input type="hidden" name="taxonomy" value="{$selected}"><label class="text-sm font-medium" for="taxonomy-locale">{=t('内容语言')}</label><select id="taxonomy-locale" name="locale" onchange="this.form.submit()">{foreach $locales as $code => $label}<option value="{$code}" selected="{$code === $locale}">{$label} ({$code})</option>{/foreach}</select></form></div>
+<section class="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+<form class="flex flex-wrap gap-3 border-b border-slate-200 px-4 py-3" method="get" action="{route('admin.taxonomies.index')}"><input type="hidden" name="taxonomy" value="{$selected}"><input type="hidden" name="locale" value="{$locale}"><input class="min-w-0 flex-1" name="q" value="{$query}" placeholder="{=t('搜索名称或 URL 别名')}" aria-label="{=t('搜索条目')}"><button class="admin-button px-4 py-2.5">{=t('搜索')}</button>{if $query !== ''}<a class="self-center font-medium text-blue-700" href="{route('admin.taxonomies.index', ['taxonomy' => $selected, 'locale' => $locale])}">{=t('清除搜索')}</a>{/if}</form>
+<form id="taxonomy-reorder" method="post" action="{route('admin.taxonomy-terms.reorder')}"><input name="_token" type="hidden" value="{$csrfToken}"><input name="taxonomy" type="hidden" value="{$selected}"><input name="locale" type="hidden" value="{$locale}"><input name="page" type="hidden" value="{$result['page']}"></form>
+<div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-50 text-left text-xs font-semibold text-slate-500"><tr>{if $query === ''}<th class="w-10"><span class="sr-only">{=t('排序')}</span></th>{/if}<th class="px-5 py-3">{=t('名称')}</th><th class="px-5 py-3">{=t('URL 别名')}</th><th class="px-5 py-3">{=t('关联内容')}</th><th class="px-5 py-3 text-center">{=t('操作')}</th></tr></thead>
+<tbody class="divide-y divide-slate-100 text-slate-700"{if $query === ''} x-data="taxonomySorter()"{/if}>
+{foreach $result['items'] as $term}<tr class="hover:bg-slate-50" data-id="{$term['id']}"{if $query === ''} @dragover.prevent="over($event)" @drop.prevent="drop($event)"{/if}>
+{if $query === ''}<td class="text-center"><button type="button" draggable="true" @dragstart="start($event)" @dragend="finish($event)" aria-label="{=t('拖动')} {$term['name']} {=t('调整顺序')}" class="text-slate-400"><i class="ti ti-grip-vertical text-lg" aria-hidden="true"></i></button></td>{/if}
+<td class="px-5 py-4 font-medium"><a class="text-blue-700" href="{route('admin.taxonomy-terms.edit', ['handle' => $selected, 'id' => $term['id']])}?{$context}">{$term['name']}</a>{if !$term['translated']}<span class="ml-2 rounded-full bg-amber-50 px-2 py-1 text-xs text-amber-700">{=t('未翻译 · 原文')} {$term['sourceLocale']}</span>{/if}</td><td class="px-5 py-4 font-mono text-slate-500">{$term['slug']}</td><td class="px-5 py-4">{$term['content_count']}</td><td class="px-5 py-4"><div class="flex items-center justify-center gap-3 whitespace-nowrap"><a class="font-medium text-blue-700" href="{route('admin.taxonomy-terms.edit', ['handle' => $selected, 'id' => $term['id']])}?{$context}">{=t('编辑')}</a><a class="font-medium text-red-600" href="{route('admin.taxonomy-terms.delete.confirm', ['handle' => $selected, 'id' => $term['id']])}?{$context}">{=t('删除')}</a></div></td></tr>
+{else}<tr><td colspan="{$query === '' ? 5 : 4}" class="px-5 py-10 text-center text-slate-500">{$query !== '' ? t('taxonomy.no_results') : t('taxonomy.empty')}</td></tr>{/foreach}
+</tbody></table></div>
+<nav class="flex justify-between gap-3 border-t border-slate-200 px-5 py-4" aria-label="{=t('条目分页')}"><span class="text-slate-500">{=t('taxonomy.pagination', ['total' => $result['total'], 'page' => $result['page'], 'pages' => $result['pages']])}</span><div class="flex gap-4">{if $result['page'] > 1}<a class="font-medium text-blue-700" href="{$previousUrl}">{=t('上一页')}</a>{/if}{if $result['page'] < $result['pages']}<a class="font-medium text-blue-700" href="{$nextUrl}">{=t('下一页')}</a>{/if}</div></nav>
+</section>
+{/block}
+
+{block scripts}
+<script n:syntax="off">
+document.addEventListener('alpine:init', () => {
+    Alpine.data('taxonomySorter', () => ({
+        dragged: null,
+        start(event) {
+            this.dragged = event.currentTarget.closest('tr');
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', this.dragged.dataset.id);
+            this.dragged.classList.add('opacity-50', 'bg-blue-50');
+        },
+        over(event) {
+            const row = event.currentTarget;
+            if (this.dragged !== null && row !== this.dragged) {
+                row.classList.add('bg-blue-50');
+            }
+        },
+        finish(event) {
+            this.dragged?.classList.remove('opacity-50');
+            event.currentTarget.closest('tbody')?.querySelectorAll('tr').forEach((row) => row.classList.remove('bg-blue-50'));
+            this.dragged = null;
+        },
+        drop(event) {
+            const target = event.currentTarget;
+            const body = target.closest('tbody');
+            if (this.dragged === null || target === this.dragged) {
+                return;
+            }
+            const insertAfter = event.clientY > target.getBoundingClientRect().top + target.getBoundingClientRect().height / 2;
+            body.insertBefore(this.dragged, insertAfter ? target.nextSibling : target);
+            const form = document.getElementById('taxonomy-reorder');
+            form.querySelectorAll('input[name="order[]"]').forEach((input) => input.remove());
+            body.querySelectorAll('tr[data-id]').forEach((row) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'order[]';
+                input.value = row.dataset.id;
+                form.append(input);
+            });
+            form.requestSubmit();
+        },
+    }));
+});
+</script>
+{/block}

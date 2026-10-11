@@ -1,0 +1,72 @@
+{extends 'layout.jst'}
+
+{block headerActions}
+    <a class="admin-button inline-flex items-center gap-2 px-4 py-2.5" href="{route('admin.content.create', ['type' => $typeHandle, 'locale' => $locale])}"><i class="ti ti-plus" aria-hidden="true"></i>{=t('新建')}</a>
+{/block}
+
+{block content}
+<section class="w-full">
+    <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
+    <form class="flex items-center gap-3 border-b border-slate-200 px-4 py-3" method="get">
+        <label class="text-sm font-medium" for="content-locale">{=t('内容语言')}</label>
+        <select id="content-locale" name="locale" onchange="this.form.submit()">{foreach $locales as $code => $label}<option value="{$code}" selected="{$code === $locale}">{$label} ({$code})</option>{/foreach}</select>
+    </form>
+    <div class="list-toolbar relative flex flex-wrap items-center justify-end gap-2 border-b border-slate-200 px-4 py-3" data-columns-key="jinstan:list-columns:{$typeHandle}" x-data="{ open: null }" @click.outside="open = null" @click.self="open = null">
+        <form class="relative" method="get" @click="open = null">
+            <input type="hidden" name="locale" value="{$locale}">
+            {foreach $visibleColumns as $column}<input type="hidden" name="columns[]" value="{$column}">{/foreach}
+            <input type="hidden" name="status" value="{$filters['status']}">
+            <i class="ti ti-search pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true"></i>
+            <input class="block w-56 text-sm" id="list-search" name="q" placeholder="{=t('搜索当前显示字段')}" value="{$filters['q']}" aria-label="{=t('搜索当前显示字段')}" style="padding-left: 2.5rem">
+        </form>
+
+        <div>
+            <button class="flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800" type="button" title="{=t('筛选')}" aria-label="{=t('筛选')}" @click="open = open === 'filter' ? null : 'filter'"><i class="ti ti-filter" aria-hidden="true"></i></button>
+        </div>
+
+        <div>
+            <button class="flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800" type="button" title="{=t('列管理')}" aria-label="{=t('列管理')}" @click="open = open === 'columns' ? null : 'columns'"><i class="ti ti-columns-3" aria-hidden="true"></i></button>
+        </div>
+
+        <form class="absolute right-4 top-14 z-10 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-4 shadow-lg" method="get" x-show="open === 'filter'" x-cloak @click.stop>
+            <input type="hidden" name="locale" value="{$locale}">
+            {foreach $visibleColumns as $column}<input type="hidden" name="columns[]" value="{$column}">{/foreach}
+            <input type="hidden" name="q" value="{$filters['q']}">
+            <label class="block text-sm font-semibold text-slate-800" for="list-status">{=t('状态')}</label>
+            <select class="mt-2 block w-full" id="list-status" name="status"><option value="">{=t('全部状态')}</option><option value="published"{if $filters['status'] === 'published'} selected{/if}>{=t('已发布')}</option><option value="draft"{if $filters['status'] === 'draft'} selected{/if}>{=t('草稿')}</option></select>
+            <div class="mt-4 flex items-center gap-2 border-t border-slate-100 pt-3"><button class="admin-button inline-flex items-center gap-1 px-3 py-2 text-sm" type="submit"><i class="ti ti-check" aria-hidden="true"></i>{=t('应用')}</button><a class="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100" href="{route('admin.content.index', ['type' => $typeHandle])}">{=t('重置')}</a></div>
+        </form>
+
+        <form class="list-columns-form absolute right-4 top-14 z-10 mt-2 w-56 rounded-xl border border-slate-200 bg-white p-4 shadow-lg" method="get" x-show="open === 'columns'" x-cloak @click.stop>
+            <input type="hidden" name="locale" value="{$locale}">
+            <input type="hidden" name="q" value="{$filters['q']}">
+            <input type="hidden" name="status" value="{$filters['status']}">
+            <p class="text-sm font-semibold text-slate-800">{=t('列管理')}</p>
+            <fieldset class="mt-2"><legend class="sr-only">{=t('管理列表列')}</legend>
+                {foreach ['id' => t('ID'), 'title' => t('标题'), 'slug' => t('content.slug'), 'status' => t('状态')] as $name => $label}
+                    <label class="flex items-center gap-2 py-1.5 text-sm"><input name="columns[]" type="checkbox" value="{$name}"{if in_array($name, $visibleColumns, true)} checked{/if}{if in_array($name, $requiredColumns, true)} disabled{/if}>{$label}{if in_array($name, $requiredColumns, true)}<span class="ml-auto text-xs text-slate-400">{=t('必选')}</span>{/if}</label>
+                    {if in_array($name, $requiredColumns, true)}<input type="hidden" name="columns[]" value="{$name}">{/if}
+                {/foreach}
+            </fieldset>
+            <div class="mt-3 flex gap-2 border-t border-slate-100 pt-3"><button class="admin-button inline-flex items-center gap-1 px-3 py-2 text-sm" type="submit"><i class="ti ti-check" aria-hidden="true"></i>{=t('应用')}</button><button class="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100" name="reset_columns" type="submit" value="1">{=t('重置')}</button></div>
+        </form>
+    </div>
+
+    {include 'lists/table.jst', columns: $columns, rows: $items, empty: t('content.empty'), embedded: true}
+    {if $pagination['total'] > 0}
+        <nav class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-4 py-3" aria-label="{=t('内容分页')}">
+            <p class="text-sm text-slate-500">{=t('content.pagination', ['from' => $pagination['from'], 'to' => $pagination['to'], 'total' => $pagination['total']])}</p>
+            {if count($pagination['pages']) > 1}
+                <div class="flex items-center gap-1">
+                    {if $pagination['previousUrl']}<a class="rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-100" href="{$pagination['previousUrl']}">{=t('上一页')}</a>{/if}
+                    {foreach $pagination['pages'] as $item}
+                        <a class="rounded-lg px-3 py-2 text-sm font-medium{if $item['current']} bg-slate-950 text-white{else} text-slate-600 hover:bg-slate-100{/if}" href="{$item['url']}"{if $item['current']} aria-current="page"{/if}>{$item['number']}</a>
+                    {/foreach}
+                    {if $pagination['nextUrl']}<a class="rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-100" href="{$pagination['nextUrl']}">{=t('下一页')}</a>{/if}
+                </div>
+            {/if}
+        </nav>
+    {/if}
+    </div>
+</section>
+{/block}

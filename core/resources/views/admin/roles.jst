@@ -1,0 +1,16 @@
+{extends 'layout.jst'}
+
+{block headerActions}<a class="admin-button inline-flex items-center gap-2 px-4 py-2.5" href="{route('admin.roles.create')}"><i class="ti ti-plus" aria-hidden="true"></i>{=t('新增角色')}</a>{/block}
+
+{block content}
+<section class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+    <table class="min-w-full divide-y divide-slate-200 text-sm">
+        <thead class="bg-slate-50 text-left text-xs font-semibold text-slate-500"><tr><th class="px-5 py-3">{=t('角色')}</th><th class="px-5 py-3">{=t('角色标识')}</th><th class="px-5 py-3">{=t('用户数')}</th><th class="px-5 py-3">{=t('权限数')}</th><th class="px-5 py-3 text-center">{=t('操作')}</th></tr></thead>
+        <tbody class="divide-y divide-slate-100 text-slate-700">
+            {foreach $roles as $role}
+                <tr class="hover:bg-slate-50"><td class="px-5 py-4 font-medium">{$role['label']}{if $role['role_key'] === 'administrator'}<span class="ml-2 rounded-full bg-blue-50 px-2 py-1 text-xs text-blue-700">{=t('内置')}</span>{/if}</td><td class="px-5 py-4 font-mono text-slate-500">{$role['role_key']}</td><td class="px-5 py-4">{$role['user_count']}</td><td class="px-5 py-4">{$role['permission_count']}</td><td class="px-5 py-4"><div class="flex items-center justify-center gap-3"><a class="font-medium text-blue-700" href="{route('admin.roles.edit', ['key' => $role['role_key']])}">{=t('编辑')}</a>{if $role['role_key'] !== 'administrator'}<form method="post" action="{route('admin.roles.delete', ['key' => $role['role_key']])}" data-confirm-title="{=t('删除此角色？')}" data-confirm-message="{=t('角色将从所有用户中移除，无法撤销。')}" data-confirm-action="{=t('删除角色')}"><input type="hidden" name="_token" value="{$csrfToken}"><button class="font-medium text-red-600" type="submit">{=t('删除')}</button></form>{/if}</div></td></tr>
+            {else}<tr><td class="px-5 py-10 text-center text-slate-500" colspan="5">{=t('暂无角色。')}</td></tr>{/foreach}
+        </tbody>
+    </table>
+</section>
+{/block}

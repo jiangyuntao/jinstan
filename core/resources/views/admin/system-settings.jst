@@ -1,0 +1,90 @@
+{extends 'layout.jst'}
+
+{block content}
+<section class="w-full" x-data="{ tab: '{$activeTab}' }">
+    <p class="text-sm text-slate-500">{=t('settings.description')}</p>
+    <form class="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm" method="post" action="{route('admin.settings.system.save')}">
+        <input type="hidden" name="_token" value="{$csrfToken}">
+        <input type="hidden" name="active_tab" x-model="tab">
+        <div class="flex flex-wrap gap-1 border-b border-slate-200" role="tablist" aria-label="{=t('settings.group')}">
+            <button class="rounded-t-lg px-4 py-2.5 text-sm font-medium" type="button" role="tab" :class="tab === 'site' ? 'bg-slate-100 text-slate-950' : 'text-slate-500 hover:bg-slate-50'" :aria-selected="tab === 'site'" @click="tab = 'site'">{=t('settings.identity')}</button>
+            <button class="rounded-t-lg px-4 py-2.5 text-sm font-medium" type="button" role="tab" :class="tab === 'locale' ? 'bg-slate-100 text-slate-950' : 'text-slate-500 hover:bg-slate-50'" :aria-selected="tab === 'locale'" @click="tab = 'locale'">{=t('settings.locale')}</button>
+            <button class="rounded-t-lg px-4 py-2.5 text-sm font-medium" type="button" role="tab" :class="tab === 'theme' ? 'bg-slate-100 text-slate-950' : 'text-slate-500 hover:bg-slate-50'" :aria-selected="tab === 'theme'" @click="tab = 'theme'">{=t('settings.theme_tab')}</button>
+            <button class="rounded-t-lg px-4 py-2.5 text-sm font-medium" type="button" role="tab" :class="tab === 'content' ? 'bg-slate-100 text-slate-950' : 'text-slate-500 hover:bg-slate-50'" :aria-selected="tab === 'content'" @click="tab = 'content'">{=t('settings.content_defaults')}</button>
+            <button class="rounded-t-lg px-4 py-2.5 text-sm font-medium" type="button" role="tab" :class="tab === 'predefined' ? 'bg-slate-100 text-slate-950' : 'text-slate-500 hover:bg-slate-50'" :aria-selected="tab === 'predefined'" @click="tab = 'predefined'">{=t('settings.predefined_pages')}</button>
+            <button class="rounded-t-lg px-4 py-2.5 text-sm font-medium" type="button" role="tab" :class="tab === 'seo' ? 'bg-slate-100 text-slate-950' : 'text-slate-500 hover:bg-slate-50'" :aria-selected="tab === 'seo'" @click="tab = 'seo'">SEO</button>
+            <button class="rounded-t-lg px-4 py-2.5 text-sm font-medium" type="button" role="tab" :class="tab === 'sns' ? 'bg-slate-100 text-slate-950' : 'text-slate-500 hover:bg-slate-50'" :aria-selected="tab === 'sns'" @click="tab = 'sns'">SNS</button>
+            <button class="rounded-t-lg px-4 py-2.5 text-sm font-medium" type="button" role="tab" :class="tab === 'urls' ? 'bg-slate-100 text-slate-950' : 'text-slate-500 hover:bg-slate-50'" :aria-selected="tab === 'urls'" @click="tab = 'urls'">{=t('保留路由')}</button>
+            <button class="rounded-t-lg px-4 py-2.5 text-sm font-medium" type="button" role="tab" :class="tab === 'custom' ? 'bg-slate-100 text-slate-950' : 'text-slate-500 hover:bg-slate-50'" :aria-selected="tab === 'custom'" @click="tab = 'custom'">{=t('自定义设置')}</button>
+        </div>
+        <div class="space-y-6 pt-6" x-show="tab === 'site'">
+            <div class="grid gap-6 md:grid-cols-2"><div><label class="block text-sm font-medium text-slate-700" for="site_name">{=t('settings.site_name')}</label><input class="mt-1 block w-full" id="site_name" name="site_name" required maxlength="255" value="{$settings['site.name']}"><p class="mt-1 text-sm text-slate-500">{=t('用于后台识别及 SEO 标题回退。')}</p></div><div><label class="block text-sm font-medium text-slate-700" for="site_tagline">{=t('settings.site_tagline')}</label><input class="mt-1 block w-full" id="site_tagline" name="site_tagline" maxlength="160" value="{$settings['site.tagline']}"><p class="mt-1 text-sm text-slate-500">{=t('一句话说明站点定位，主题可在页头或页脚展示。')}</p></div></div>
+            <div><label class="block text-sm font-medium text-slate-700" for="site_description">{=t('settings.site_description')}</label><textarea class="mt-1 block w-full" id="site_description" name="site_description" rows="4" maxlength="320">{$settings['site.description']}</textarea><p class="mt-1 text-sm text-slate-500">{=t('未设置 SEO 默认描述时，会作为公开内容的描述回退。')}</p></div>
+            <div><label class="block text-sm font-medium text-slate-700" for="contact_email">{=t('settings.contact_email')}</label><input class="mt-1 block w-full" id="contact_email" name="contact_email" type="email" maxlength="255" value="{$settings['site.contact_email']}"><p class="mt-1 text-sm text-slate-500">{=t('主题可用于联系入口或页脚；不会替代管理员登录邮箱。')}</p></div>
+            <div><label class="block text-sm font-medium text-slate-700" for="site_footer">{=t('settings.footer')}</label><textarea class="mt-1 block w-full" id="site_footer" name="site_footer" rows="3" maxlength="500">{$settings['site.footer']}</textarea><p class="mt-1 text-sm text-slate-500">{=t('显示在网站页脚，可填写版权、备案或运营主体信息。')}</p></div>
+        </div>
+        <div class="space-y-6 pt-6" x-show="tab === 'locale'" x-cloak>
+            <div class="grid gap-6 md:grid-cols-2"><div>{include 'fields/searchable-select.jst', field: ['name' => 'frontend_locale', 'inputName' => 'frontend_locale', 'label' => t('settings.frontend_locale'), 'value' => $settings['site.default_locale'], 'options' => $languages, 'help' => t('网站公开页面的默认语言。')]}</div><div>{include 'fields/searchable-select.jst', field: ['name' => 'admin_locale', 'inputName' => 'admin_locale', 'label' => t('settings.admin_locale'), 'value' => $settings['admin.locale'], 'options' => $adminLanguages, 'help' => t('后台界面的首选语言。')]}</div></div>
+            <div class="grid gap-6 md:grid-cols-2"><div>{include 'fields/searchable-select.jst', field: ['name' => 'timezone', 'inputName' => 'timezone', 'label' => t('时区'), 'value' => $settings['site.timezone'], 'options' => $timezones, 'help' => t('用于内容时间与系统时间的显示和计算。')]}</div><div>{include 'fields/select.jst', field: ['name' => 'date_format', 'inputName' => 'date_format', 'label' => t('日期格式'), 'value' => $settings['site.date_format'], 'options' => $dateFormats, 'required' => true, 'help' => t('主题和组件显示日期时应使用该格式。')]}</div></div>
+        </div>
+        <div class="space-y-6 pt-6" x-show="tab === 'theme'" x-cloak>{include 'fields/select.jst', field: ['name' => 'theme', 'inputName' => 'theme', 'label' => t('settings.frontend_theme'), 'value' => $settings['site.theme'], 'options' => $themes, 'required' => true, 'help' => t('选择前台网站使用的主题。主题模板可在“模板编辑”中修改。')]}</div>
+        <div class="space-y-6 pt-6" x-show="tab === 'content'" x-cloak>
+            <div><label class="block text-sm font-medium text-slate-700" for="content_per_page">{=t('每页内容数目')}</label><input class="mt-1 block w-full" id="content_per_page" name="content_per_page" type="number" min="1" max="100" value="{$settings['content.per_page']}" required><p class="mt-1 text-sm text-slate-500">{=t('用于前台内容列表分页，允许设置 1 到 100。')}</p></div>
+            {include 'fields/select.jst', field: ['name' => 'content_sort', 'inputName' => 'content_sort', 'label' => t('内容排序方式'), 'value' => $settings['content.sort'], 'options' => ['newest' => t('最新发布优先'), 'oldest' => t('最早发布优先'), 'title_asc' => t('标题升序'), 'title_desc' => t('标题降序')], 'required' => true, 'help' => t('决定前台内容列表及主题首页内容区块的默认顺序。')]}
+            {include 'fields/select.jst', field: ['name' => 'default_content_status', 'inputName' => 'default_content_status', 'label' => t('默认内容状态'), 'value' => $settings['content.default_status'], 'options' => ['draft' => t('草稿'), 'published' => t('已发布')], 'required' => true, 'help' => t('新建文章、页面、产品及自定义内容时使用；不会修改已有内容。')]}
+        </div>
+        <div class="space-y-6 pt-6" x-show="tab === 'predefined'" x-cloak>
+            {foreach $predefinedPages as $inputName => $definition}
+                {include 'fields/searchable-select.jst', field: ['name' => $inputName, 'inputName' => $inputName, 'label' => t($definition['label']), 'value' => $settings[$definition['setting']], 'options' => [0 => t($definition['empty'])] + $pages, 'required' => false, 'help' => t($definition['help'])]}
+            {/foreach}
+        </div>
+        <div class="space-y-8 pt-6" x-show="tab === 'seo'" x-cloak>
+            <section class="space-y-6" aria-labelledby="seo-search-heading"><div><h2 class="text-lg font-semibold" id="seo-search-heading">{=t('标题格式')}</h2><p class="mt-1 text-sm text-slate-500">{=t('使用模板占位符分别设置不同前台页面的标题。可用：{site_name}、{tagline}、{title}、{content_type}、{page}、{page_suffix}、{separator}。')}</p></div><div><label class="block text-sm font-medium text-slate-700" for="default_title">{=t('SEO 站点名称')}</label><input class="mt-1 block w-full" id="default_title" name="default_title" maxlength="255" value="{$settings['seo.default_title']}"><p class="mt-1 text-sm text-slate-500">{=t('留空时使用基本信息中的站点名称。')}</p></div><div><label class="block text-sm font-medium text-slate-700" for="title_separator">{=t('标题分隔符')}</label><input class="mt-1 block w-full" id="title_separator" name="title_separator" maxlength="20" value="{$settings['seo.title_separator']}"></div><div class="grid gap-6 md:grid-cols-2"><div><label class="block text-sm font-medium text-slate-700" for="title_homepage">{=t('首页标题格式')}</label><input class="mt-1 block w-full font-mono" id="title_homepage" name="title_homepage" maxlength="255" value="{$settings['seo.title_homepage']}"></div><div><label class="block text-sm font-medium text-slate-700" for="title_content">{=t('内容详情标题格式')}</label><input class="mt-1 block w-full font-mono" id="title_content" name="title_content" maxlength="255" value="{$settings['seo.title_content']}"></div><div><label class="block text-sm font-medium text-slate-700" for="title_listing">{=t('内容列表标题格式')}</label><input class="mt-1 block w-full font-mono" id="title_listing" name="title_listing" maxlength="255" value="{$settings['seo.title_listing']}"></div><div><label class="block text-sm font-medium text-slate-700" for="title_not_found">{=t('404 标题格式')}</label><input class="mt-1 block w-full font-mono" id="title_not_found" name="title_not_found" maxlength="255" value="{$settings['seo.title_not_found']}"></div></div><div><label class="block text-sm font-medium text-slate-700" for="default_description">{=t('默认描述')}</label><textarea class="mt-1 block w-full" id="default_description" name="default_description" rows="4" maxlength="320">{$settings['seo.default_description']}</textarea><p class="mt-1 text-sm text-slate-500">{=t('内容没有摘要或独立描述时使用；留空则回退到站点描述。')}</p></div><div><label class="block text-sm font-medium text-slate-700" for="robots">{=t('默认 robots')}</label><select class="mt-1 block w-full" id="robots" name="robots"><option value="index,follow"{if $settings['seo.robots'] === 'index,follow'} selected{/if}>{=t('seo.robots_index')}</option><option value="noindex,follow"{if $settings['seo.robots'] === 'noindex,follow'} selected{/if}>{=t('seo.robots_noindex')}</option><option value="noindex,nofollow"{if $settings['seo.robots'] === 'noindex,nofollow'} selected{/if}>{=t('seo.robots_none')}</option></select><p class="mt-1 text-sm text-slate-500">{=t('全站默认值；内容级 SEO 规则优先级将在内容模型中处理。')}</p></div></section>
+        </div>
+        <div class="space-y-8 pt-6" x-show="tab === 'sns'" x-cloak>
+            <p class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">{=t('填写站点在各社交平台的完整主页地址。留空的平台不会在前台显示。')}</p>
+            {foreach $snsPlatforms as $region => $platforms}
+                <section class="space-y-4{if !$iterator->first} border-t border-slate-100 pt-6{/if}" aria-labelledby="sns-{$region}-heading">
+                    <h2 class="text-lg font-semibold" id="sns-{$region}-heading">{=t('sns.region.' . $region)}</h2>
+                    <div class="grid gap-6 md:grid-cols-2">
+                        {foreach $platforms as $handle => $label}<div><label class="block text-sm font-medium text-slate-700" for="sns-{$handle}">{$label}</label><input class="mt-1 block w-full" id="sns-{$handle}" name="sns[{$handle}]" type="url" maxlength="2048" placeholder="https://" value="{$settings['site.sns.' . $handle]}"></div>{/foreach}
+                    </div>
+                </section>
+            {/foreach}
+        </div>
+        <div class="space-y-6 pt-6" x-show="tab === 'urls'" x-cloak>
+            <div class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800"><p class="font-semibold">{=t('保留路由有什么作用？')}</p><p class="mt-1">{=t('保留路由用于防止页面或其他内容的 URL 别名占用系统功能、内容归档、订阅和资源入口。内容生成的路径与这里的路由冲突时，系统会拒绝保存，并提示更换 URL 别名。')}</p></div>
+            <div><label class="block text-sm font-medium text-slate-700" id="protected-routes-label">{=t('保留路由')}</label><textarea class="hidden" id="protected-routes-source" name="protected_slugs" rows="24" spellcheck="false">{$settings['routing.protected_slugs']}</textarea><div class="code-editor" id="protected-routes-editor" data-code-editor data-code-language="plain" data-input="protected-routes-source" data-aria-labelledby="protected-routes-label"></div><p class="mt-2 text-sm text-slate-500">{=t('一行一个路由并以 / 开头。系统路由与内容类型列表路由始终受到保护。')}</p></div>
+        </div>
+        <div class="space-y-6 pt-6" x-show="tab === 'custom'" x-cloak>
+            <div class="flex items-start justify-between gap-4">
+                <div class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">{=t('添加供当前站点主题使用的自定义键值。模板可通过 $site[custom][键名] 读取。')}</div>
+                <button class="admin-button shrink-0 px-4 py-2.5" type="button" id="add-custom-setting">{=t('添加设置')}</button>
+            </div>
+            <div class="space-y-3" id="custom-settings-rows">
+                {foreach $customSettings as $key => $value}
+                    <div class="gap-3" style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto; align-items: center;" data-custom-setting-row><input name="custom_keys[]" maxlength="64" pattern="[a-z][a-z0-9_.-]*" aria-label="{=t('设置键')}" placeholder="company.name" value="{$key}"><input name="custom_values[]" maxlength="10000" aria-label="{=t('设置值')}" placeholder="{=t('设置值')}" value="{$value}"><button class="whitespace-nowrap text-sm font-medium text-red-600" type="button" data-remove-custom-setting>{=t('删除')}</button></div>
+                {/foreach}
+            </div>
+            <template id="custom-setting-template"><div class="gap-3" style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto; align-items: center;" data-custom-setting-row><input name="custom_keys[]" maxlength="64" pattern="[a-z][a-z0-9_.-]*" aria-label="{=t('设置键')}" placeholder="company.name"><input name="custom_values[]" maxlength="10000" aria-label="{=t('设置值')}" placeholder="{=t('设置值')}"><button class="whitespace-nowrap text-sm font-medium text-red-600" type="button" data-remove-custom-setting>{=t('删除')}</button></div></template>
+        </div>
+        <div class="mt-6 flex items-center gap-3 border-t border-slate-100 pt-5"><button class="admin-button inline-flex items-center gap-2 px-4 py-2.5" type="submit"><i class="ti ti-device-floppy" aria-hidden="true"></i>{=t('admin.save')}</button></div>
+    </form>
+</section>
+{/block}
+
+{block scripts}
+<script n:syntax="off">
+    const customRows = document.getElementById('custom-settings-rows');
+    const customTemplate = document.getElementById('custom-setting-template');
+    document.getElementById('add-custom-setting').addEventListener('click', () => {
+        customRows.append(customTemplate.content.cloneNode(true));
+        customRows.lastElementChild.querySelector('input').focus();
+    });
+    customRows.addEventListener('click', (event) => {
+        if (event.target.matches('[data-remove-custom-setting]')) {
+            event.target.closest('[data-custom-setting-row]').remove();
+        }
+    });
+</script>
+{/block}

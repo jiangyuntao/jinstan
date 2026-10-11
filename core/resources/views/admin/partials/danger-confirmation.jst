@@ -1,0 +1,13 @@
+<dialog class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-0 shadow-xl backdrop:bg-slate-950/40" id="danger-confirmation-dialog" aria-labelledby="danger-confirmation-title" aria-describedby="danger-confirmation-message" data-default-confirm="{=t('admin.confirm')}">
+    <div class="p-6">
+        <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600"><i class="ti ti-alert-triangle" aria-hidden="true"></i></div>
+            <h2 class="text-lg font-semibold text-slate-900" id="danger-confirmation-title">{=t('admin.dangerous_action')}</h2>
+        </div>
+        <p class="mt-2 text-sm leading-6 text-slate-600" id="danger-confirmation-message"></p>
+        <div class="mt-6 flex justify-end gap-3">
+            <button class="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100" id="danger-confirmation-cancel" type="button">{=t('admin.cancel')}</button>
+            <button class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700" id="danger-confirmation-submit" type="button">{=t('admin.confirm')}</button>
+        </div>
+    </div>
+</dialog>

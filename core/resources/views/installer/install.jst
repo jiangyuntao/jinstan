@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>安装 Jinstan</title>
+</head>
+<body>
+<main>
+    <h1>安装 Jinstan</h1>
+    {if $error !== null}<p role="alert">{$error}</p>{/if}
+    <h2>环境检查</h2>
+    <ul>{foreach $checks as $label => $passed}<li>{$label}：{$passed ? '通过' : '未通过'}</li>{/foreach}</ul>
+    <form method="post" action="{$action}">
+        <input type="hidden" name="_token" value="{$csrfToken}">
+        <label>站点名称 <input name="site_name" required></label>
+        <label>管理员邮箱 <input name="email" type="email" required></label>
+        <label>管理员密码 <input name="password" type="password" minlength="6" maxlength="1024" autocomplete="new-password" required></label>
+        <fieldset>
+            <legend>数据库</legend>
+            <label><input type="radio" name="database_driver" value="sqlite" checked> SQLite（推荐）</label>
+            <label><input type="radio" name="database_driver" value="mysql"> MySQL / MariaDB</label>
+            <label><input type="radio" name="database_driver" value="pgsql"> PostgreSQL</label>
+            <label>主机 <input name="database_host"></label>
+            <label>端口 <input name="database_port"></label>
+            <label>数据库名 <input name="database_name"></label>
+            <label>用户名 <input name="database_username"></label>
+            <label>密码 <input name="database_password" type="password"></label>
+        </fieldset>
+        <button type="submit">完成安装</button>
+    </form>
+</main>
+</body>
+</html>

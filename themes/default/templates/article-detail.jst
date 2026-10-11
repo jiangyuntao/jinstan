@@ -1,0 +1,5 @@
+{extends 'content-detail.jst'}
+{block detailClass}detail{/block}
+{block related}
+{if hasComponent('related-posts')}{=component('related-posts', ['limit' => 6], $content, $translation)}{/if}
+{/block}

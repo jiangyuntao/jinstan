@@ -1,0 +1,59 @@
+{extends '../layouts/default.jst'}
+{block content}
+{if hasComponent('breadcrumb')}{=component('breadcrumb', [], $content, $translation)}{/if}
+<article class="product-page">
+    <div class="product-showcase">
+        <div class="product-media">
+            {var $hasMainImage = false}
+            {foreach $field_items as $field}
+                {if $field['name'] === 'cover_image'}
+                    {do $hasMainImage = true}
+                    <figure class="product-main-image" data-field="cover_image" data-product-main><img src="{$field['value']}" alt="{$translation->title}" data-product-main-image></figure>
+                {/if}
+            {/foreach}
+            {if !$hasMainImage}<figure class="product-main-image product-main-placeholder" data-product-main><img alt="{$translation->title}" data-product-main-image hidden><span aria-hidden="true">J</span></figure>{/if}
+            {foreach $field_items as $field}
+                {if $field['name'] === 'gallery'}
+                    <section class="product-gallery" data-field="gallery" data-product-gallery aria-label="{$field['label']}">
+                        {foreach $field['value'] as $image}<button type="button" data-product-thumbnail data-src="{$image}" data-alt="{$translation->title} {$iterator->counter}" aria-label="查看图片 {$iterator->counter}" aria-pressed="false"><img src="{$image}" alt="" loading="lazy"></button>{/foreach}
+                    </section>
+                {/if}
+            {/foreach}
+        </div>
+        <div class="product-summary">
+            <header class="detail-header"><h1>{$translation->title}</h1>{if $translation->excerpt}<p>{$translation->excerpt}</p>{/if}</header>
+            {foreach $field_items as $field}
+                {if $field['name'] === 'sku'}
+                    <section class="product-skus" data-field="sku"><h2>{$field['label']}</h2><div class="sku-list">{foreach $field['value'] as $variant}<div class="sku-row"><strong>{$variant['title']}</strong><span>{$variant['code']}</span><span class="price">{$variant['price']}</span><span>库存 {$variant['stock']}</span></div>{/foreach}</div></section>
+                {/if}
+            {/foreach}
+            {if hasComponent('external-order-form')}<div class="product-order">{=component('external-order-form', ['product_id' => $content->id], $content, $translation)}</div>{/if}
+        </div>
+    </div>
+    <div class="product-introduction">
+        {include '../partials/content-fields.jst', field_items: $field_items, excludedFields: ['cover_image', 'gallery', 'sku']}
+    </div>
+</article>
+<script n:syntax="off">
+document.querySelectorAll('[data-product-gallery]').forEach((gallery) => {
+    const media = gallery.closest('.product-media');
+    const main = media?.querySelector('[data-product-main]');
+    const image = main?.querySelector('[data-product-main-image]');
+    if (!main || !image) return;
+
+    gallery.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-product-thumbnail]');
+        if (!button || !gallery.contains(button)) return;
+
+        image.src = button.dataset.src;
+        image.alt = button.dataset.alt;
+        image.hidden = false;
+        main.classList.remove('product-main-placeholder');
+        main.querySelector('span')?.remove();
+        gallery.querySelectorAll('[data-product-thumbnail]').forEach((thumbnail) => {
+            thumbnail.setAttribute('aria-pressed', thumbnail === button ? 'true' : 'false');
+        });
+    });
+});
+</script>
+{/block}

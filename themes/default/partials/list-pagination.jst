@@ -1,0 +1,4 @@
+<nav class="pagination" aria-label="分页">
+    <span>共 {$pagination['total']} {$unit ?? '篇'} · 第 {$pagination['page']} / {$pagination['pages']} 页</span>
+    <div>{if $previousUrl}<a href="{$previousUrl}" rel="prev">← 上一页</a>{/if}{if $nextUrl}<a href="{$nextUrl}" rel="next">下一页 →</a>{/if}</div>
+</nav>

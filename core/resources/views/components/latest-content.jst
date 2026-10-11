@@ -1,0 +1,14 @@
+<section class="latest-content">
+    {if $heading}<h2>{$heading}</h2>{/if}
+    {if $items}
+        <ul>
+            {foreach $items as $item}
+                <li>
+                    <a href="{$item['url']}">{$item['title']}</a>
+                    {if $item['excerpt']}<p>{$item['excerpt']}</p>{/if}
+                </li>
+            {/foreach}
+        </ul>
+        <a href="{$listUrl}">查看全部</a>
+    {/if}
+</section>

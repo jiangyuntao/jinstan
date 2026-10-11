@@ -1,0 +1,14 @@
+<div class="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+    <div>
+        <label class="block cursor-pointer text-sm font-semibold text-slate-800" for="field-{$field['name']}">{$field['label']}</label>
+        {ifset $field['help']}<p class="mt-1 text-xs text-slate-500">{$field['help']}</p>{/ifset}
+    </div>
+    <div class="flex shrink-0 items-center gap-3" x-data="{ enabled: {$field['value'] ? 'true' : 'false'} }">
+        <span class="text-xs font-medium" :class="enabled ? 'text-blue-700' : 'text-slate-500'" data-on="{$field['onLabel'] ?? t('fields.switch_on')}" data-off="{$field['offLabel'] ?? t('fields.switch_off')}" x-text="enabled ? $el.dataset.on : $el.dataset.off"></span>
+        <input name="{$field['inputName']}" type="hidden" value="0">
+        <label class="relative inline-flex cursor-pointer items-center" for="field-{$field['name']}">
+            <input class="peer sr-only" id="field-{$field['name']}" name="{$field['inputName']}" type="checkbox" value="1" x-model="enabled"{if $field['value']} checked{/if}{ifset $field['submitOnChange']}{if $field['submitOnChange']} onchange="this.form.requestSubmit()"{/if}{/ifset}>
+            <span class="h-6 w-11 rounded-full bg-slate-300 transition peer-checked:bg-blue-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-100 after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow-sm after:transition peer-checked:after:translate-x-5"></span>
+        </label>
+    </div>
+</div>

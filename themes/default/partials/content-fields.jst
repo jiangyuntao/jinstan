@@ -1,0 +1,25 @@
+{foreach $field_items as $field}
+    {continueIf in_array($field['name'], $excludedFields ?? [], true)}
+    {if $field['kind'] === 'html'}
+        <section class="content-field content-field-rich" data-field="{$field['name']}">
+            <h2 class="content-field-label">{$field['label']}</h2>
+            <div class="content-body markdown-body">{$field['value']}</div>
+        </section>
+    {elseif $field['kind'] === 'image'}
+        <figure class="content-field content-field-image" data-field="{$field['name']}"><img src="{$field['value']}" alt="{$field['label']}"><figcaption>{$field['label']}</figcaption></figure>
+    {elseif $field['kind'] === 'images'}
+        <section class="content-field" data-field="{$field['name']}"><h2 class="content-field-label">{$field['label']}</h2><div class="content-field-gallery">{foreach $field['value'] as $image}<img src="{$image}" alt="{$field['label']}" loading="lazy">{/foreach}</div></section>
+    {elseif $field['kind'] === 'file'}
+        <section class="content-field" data-field="{$field['name']}"><h2 class="content-field-label">{$field['label']}</h2><a class="content-field-file" href="{$field['value']}" download>下载附件</a></section>
+    {elseif $field['kind'] === 'files'}
+        <section class="content-field" data-field="{$field['name']}"><h2 class="content-field-label">{$field['label']}</h2><ul class="content-field-files">{foreach $field['value'] as $file}<li><a href="{$file}" download>下载文件 {$iterator->counter}</a></li>{/foreach}</ul></section>
+    {elseif $field['kind'] === 'sku'}
+        <section class="content-field" data-field="{$field['name']}"><h2 class="content-field-label">{$field['label']}</h2><div class="sku-list">{foreach $field['value'] as $variant}<div class="sku-row"><strong>{$variant['title']}</strong><span>{$variant['code']}</span><span class="price">{$variant['price']}</span><span>库存 {$variant['stock']}</span></div>{/foreach}</div></section>
+    {elseif $field['kind'] === 'list'}
+        <section class="content-field" data-field="{$field['name']}"><h2 class="content-field-label">{$field['label']}</h2><ul>{foreach $field['value'] as $value}<li>{$value}</li>{/foreach}</ul></section>
+    {elseif $field['kind'] === 'json'}
+        <section class="content-field" data-field="{$field['name']}"><h2 class="content-field-label">{$field['label']}</h2><pre>{$field['value']}</pre></section>
+    {else}
+        <dl class="content-field content-field-value" data-field="{$field['name']}"><dt>{$field['label']}</dt><dd>{if $field['kind'] === 'boolean'}{=$field['value'] ? '是' : '否'}{else}{$field['value']}{/if}</dd></dl>
+    {/if}
+{/foreach}

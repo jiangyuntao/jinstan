@@ -1,0 +1,6 @@
+{if $items}
+<section class="related-posts">
+    <header class="section-title"><h2>相关文章</h2></header>
+    <div class="feed-list">{foreach $items as $item}<article class="feed-row"><h3><a href="/{$item['slug']}">{$item['title']}</a></h3><span class="row-arrow" aria-hidden="true">↗</span></article>{/foreach}</div>
+</section>
+{/if}

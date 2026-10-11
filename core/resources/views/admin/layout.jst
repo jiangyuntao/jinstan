@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="{$adminLocale}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{$pageTitle} · {=t('admin.brand_short')}</title>
+    <link rel="stylesheet" href="{=coreAsset('admin.css')}">
+    <script defer src="{=coreAsset('alpine.js')}"></script>
+    <link rel="stylesheet" href="{=coreAsset('icons.css')}">
+    <script defer src="{=coreAsset('code-editor.js')}"></script>
+    <style>
+        :root { --toss-bg: #f2f4f6; --toss-card: #ffffff; --toss-border: #e5e8eb; --toss-text: #191f28; --toss-muted: #6b7684; --toss-blue: #3182f6; --toss-blue-hover: #2272eb; --toss-blue-soft: #e8f3ff; }
+        body { background: var(--toss-bg); color: var(--toss-text); font-family: Pretendard, Inter, ui-sans-serif, system-ui, sans-serif; }
+        aside { border-color: var(--toss-border) !important; box-shadow: 1px 0 0 rgba(2, 32, 71, .02); }
+        aside nav a:hover { background: var(--toss-blue-soft); color: var(--toss-blue); }
+        aside nav a.is-active { background: var(--toss-blue-soft); color: var(--toss-blue); font-weight: 600; }
+        main .bg-white { border-color: var(--toss-border); box-shadow: 0 1px 2px rgba(2, 32, 71, .04); }
+        main { font-size: 14px; line-height: 1.5; }
+        main h1 { font-size: 22px !important; font-weight: 700 !important; letter-spacing: -0.03em; line-height: 1.35; }
+        main h2 { font-size: 20px !important; font-weight: 700 !important; letter-spacing: -0.02em; line-height: 1.4; }
+        main h3 { font-size: 16px !important; font-weight: 700 !important; line-height: 1.45; }
+        .page-content h1 { display: none; }
+        main p, main label, main input, main select, main button, main a, main dd, main dt, main li { font-size: inherit; }
+        main .admin-breadcrumb, main .admin-breadcrumb a { font-size: 12px; }
+        main .border, main .border-b { border-color: var(--toss-border); }
+        main .text-slate-500, main .text-slate-600 { color: var(--toss-muted); }
+        main a.bg-slate-950, main button.bg-slate-950 { background: var(--toss-blue); }
+        main a.bg-slate-950:hover, main button.bg-slate-950:hover { background: var(--toss-blue-hover); }
+        main .admin-button { background: var(--toss-blue); border-radius: 10px; color: #fff; font-weight: 500; transition: background .15s ease; }
+        main .admin-button:hover { background: var(--toss-blue-hover); }
+        main .admin-button:focus { box-shadow: 0 0 0 3px var(--toss-blue-soft); outline: none; }
+        main input, main select, main textarea { border-color: var(--toss-border); border-radius: 10px; border-width: 1px; }
+        main input:focus, main select:focus, main textarea:focus { border-color: var(--toss-blue); box-shadow: 0 0 0 3px var(--toss-blue-soft); outline: none; }
+        main input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type=file]), main select, main textarea { background: var(--toss-card); color: var(--toss-text); padding: .625rem .75rem; }
+        main input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), main select { min-height: 2.75rem; }
+        main select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7684' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-position: right .75rem center; background-repeat: no-repeat; background-size: 1rem; cursor: pointer; padding-right: 2.5rem; transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease; }
+        main select:hover { border-color: #c5cad3; background-color: #fafbfc; }
+        main .field-select { border: 1px solid var(--toss-border); border-radius: 10px; color: var(--toss-text); min-height: 2.75rem; transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease; }
+        main .field-select:hover { border-color: #c5cad3; background-color: #fafbfc; }
+        main .field-select:focus { border-color: var(--toss-blue); box-shadow: 0 0 0 3px var(--toss-blue-soft); outline: none; }
+        main .field-select-trigger { background: var(--toss-card); cursor: pointer; padding: .625rem .75rem; }
+        main .field-select-menu { border-color: var(--toss-border); border-radius: 10px; background: var(--toss-card); box-shadow: 0 12px 28px rgba(2, 32, 71, .14); }
+        main .field-select-option { border-radius: 8px; color: var(--toss-text); }
+        main .field-select-option:hover, main .field-select-option[aria-selected="true"] { background: var(--toss-blue-soft); color: var(--toss-blue); }
+        main textarea { padding: .625rem .75rem; }
+        main .admin-choice { align-items: center; background: var(--toss-card); border: 1px solid var(--toss-border); border-radius: 10px; color: var(--toss-text); cursor: pointer; display: inline-flex; gap: .625rem; min-height: 2.75rem; padding: .625rem .75rem; transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease; }
+        main .admin-choice:hover { border-color: #b8c1cc; background: #fafbfc; }
+        main .admin-choice:has(input:checked) { background: var(--toss-blue-soft); border-color: #93c5fd; color: #1d4ed8; }
+        main .admin-choice:focus-within { border-color: var(--toss-blue); box-shadow: 0 0 0 3px var(--toss-blue-soft); outline: none; }
+        main .admin-choice--block { display: flex; width: 100%; }
+        main .admin-choice--compact { min-height: 2.5rem; padding: .5rem .75rem; }
+        main .admin-choice input[type="checkbox"], main .admin-choice input[type="radio"] { appearance: none; background: #fff; border: 1.5px solid #94a3b8; display: grid; flex: 0 0 auto; height: 1.125rem; margin: 0; place-content: center; width: 1.125rem; }
+        main .admin-choice input[type="checkbox"] { border-radius: 5px; }
+        main .admin-choice input[type="radio"] { border-radius: 999px; }
+        main .admin-choice input[type="checkbox"]::before, main .admin-choice input[type="radio"]::before { background: var(--toss-blue); content: ''; height: .625rem; transform: scale(0); transition: transform .12s ease-in-out; width: .625rem; }
+        main .admin-choice input[type="checkbox"]::before { clip-path: polygon(14% 44%, 0 65%, 38% 100%, 100% 20%, 80% 5%, 36% 65%); background: #fff; height: .7rem; width: .7rem; }
+        main .admin-choice input[type="radio"]::before { border-radius: 999px; }
+        main .admin-choice input[type="checkbox"]:checked { background: var(--toss-blue); border-color: var(--toss-blue); }
+        main .admin-choice input[type="radio"]:checked { border-color: var(--toss-blue); }
+        main .admin-choice input:checked::before { transform: scale(1); }
+        .ti { display: inline-block; font-size: 1.1em; line-height: 1; vertical-align: -.125em; }
+        .admin-nav-icon { width: 1.25rem; text-align: center; }
+        .admin-form-feedback { align-items: center; background: rgba(15, 23, 42, .4); display: none; inset: 0; justify-content: center; padding: 1rem; position: fixed; z-index: 100; }
+        .admin-form-feedback.is-visible { display: flex; }
+        .admin-form-feedback-card { animation: admin-feedback-pop .18s ease-out; }
+        .admin-form-feedback-close { background: #10b981; border-radius: .5rem; color: #fff; font-size: .875rem; font-weight: 500; line-height: 1.25rem; padding: .5rem 1rem; transition: background .15s ease, box-shadow .15s ease; }
+        .admin-form-feedback-close:hover { background: #059669; }
+        .admin-form-feedback-close:focus { box-shadow: 0 0 0 3px #d1fae5; outline: none; }
+        @keyframes admin-feedback-pop { from { opacity: 0; transform: scale(.94) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        [x-cloak] { display: none !important; }
+        .code-editor { position: relative; min-height: 34rem; overflow: hidden; border: 1px solid var(--toss-border); border-radius: 10px; background: #fff; }
+        .code-editor .codeflask__textarea:focus { box-shadow: none; }
+        .code-editor .codeflask__pre { overflow: hidden; }
+        .code-editor .codeflask__code { overflow: visible; width: max-content; min-width: 100%; will-change: transform; }
+        .theme-workspace { min-height: 42rem; }
+        .theme-file-explorer { min-width: 0; }
+        .theme-editor-pane { min-width: 0; }
+        .theme-tree-row { min-height: 2rem; }
+        .theme-tree-directory, .theme-tree-file { position: relative; }
+        .theme-tree-row:hover { background: #eef2f6; }
+        .theme-tree-row.is-selected { background: var(--toss-blue-soft); color: var(--toss-blue); }
+        .theme-tree-toggle { align-items: center; display: inline-flex; flex: 0 0 auto; height: 1.5rem; justify-content: center; width: 1.5rem; }
+        .theme-tree-toggle:hover { background: rgba(107, 118, 132, .12); }
+        .theme-tree-actions { opacity: 0; }
+        .theme-tree-row:hover .theme-tree-actions, .theme-tree-row:focus-within .theme-tree-actions { opacity: 1; }
+        .theme-create-modal { align-items: center; background: rgba(15, 23, 42, .42); display: flex; inset: 0; justify-content: center; padding: 1.5rem; position: fixed; z-index: 80; }
+        .theme-create-dialog { max-height: calc(100vh - 3rem); overflow-y: auto; width: min(28rem, 100%); }
+        @media (min-width: 1280px) {
+            .dashboard-content-grid { grid-template-columns: repeat(var(--dashboard-columns), minmax(0, 1fr)); }
+        }
+        @media (min-width: 1024px) {
+            .theme-workspace { display: grid; grid-template-columns: 22rem minmax(0, 1fr); height: calc(100vh - 13rem); min-height: 42rem; }
+            .theme-file-explorer { border-bottom: 0 !important; border-right: 1px solid var(--toss-border); overflow-y: auto; }
+            .theme-editor-pane { overflow-y: auto; }
+        }
+    </style>
+</head>
+<body class="min-h-screen lg:h-screen lg:overflow-hidden" x-data>
+    <div id="admin-form-feedback" class="admin-form-feedback" role="dialog" aria-modal="true" aria-labelledby="admin-form-feedback-title" aria-describedby="admin-form-feedback-description">
+        <div class="admin-form-feedback-card w-full max-w-md rounded-2xl border border-slate-200 bg-white p-0 shadow-xl">
+            <div class="p-6">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600"><i class="ti ti-circle-check" aria-hidden="true"></i></div>
+                    <h2 class="text-lg font-semibold text-slate-900" id="admin-form-feedback-title">{=t('admin.form_saved')}</h2>
+                </div>
+                <p class="mt-2 text-sm leading-6 text-slate-600" id="admin-form-feedback-description">{=t('admin.form_saved_description')}</p>
+                <div class="mt-6 flex justify-end">
+                    <button class="admin-form-feedback-close" id="admin-form-feedback-close" type="button">{=t('admin.close')}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="min-h-screen lg:h-full lg:grid lg:grid-cols-[16rem_minmax(0,1fr)]">
+        <aside class="border-r bg-white p-5 lg:h-full lg:overflow-y-auto">
+            <a class="block w-full max-w-[10rem] px-3" href="{route('admin.dashboard')}" aria-label="{=t('admin.brand')} {=t('admin.home')}">
+                <img class="h-auto w-full" src="/assets/jinstan-cms-logo-light.png" alt="{=t('admin.brand')}">
+            </a>
+            <nav class="mt-6 space-y-1 text-sm">
+                <a class="admin-nav-link flex items-center gap-2 rounded px-3 py-2 hover:bg-slate-100" href="{route('admin.dashboard')}"><i class="ti ti-layout-dashboard admin-nav-icon" aria-hidden="true"></i>{=t('admin.dashboard')}</a>
+                {if $canContent}<p class="px-3 pt-6 text-xs text-slate-400">{=t('admin.content')}</p>
+                {foreach $adminContentTypes as $contentType}
+                <a class="admin-nav-link flex items-center gap-2 rounded px-3 py-2 hover:bg-slate-100" href="{route('admin.content.index', ['type' => $contentType['handle']])}"><i class="ti {$contentType['icon']} admin-nav-icon" aria-hidden="true"></i>{$contentType['label']}</a>
+                {/foreach}
+                <a class="admin-nav-link flex items-center gap-2 rounded px-3 py-2 hover:bg-slate-100" href="{route('admin.content-types.index')}"><i class="ti ti-box-multiple admin-nav-icon" aria-hidden="true"></i>{=t('admin.content_types')}</a>
+                <a class="admin-nav-link flex items-center gap-2 rounded px-3 py-2 hover:bg-slate-100" href="{route('admin.taxonomies.index')}"><i class="ti ti-category admin-nav-icon" aria-hidden="true"></i>{=t('admin.taxonomies')}</a>
+                <a class="admin-nav-link flex items-center gap-2 rounded px-3 py-2 hover:bg-slate-100" href="{route('admin.navigation.index')}"><i class="ti ti-menu-2 admin-nav-icon" aria-hidden="true"></i>{=t('admin.navigation')}</a>
+                {/if}
+                {if $canSettings}<p class="px-3 pt-6 text-xs text-slate-400">{=t('admin.settings')}</p>
+                <a class="admin-nav-link flex items-center gap-2 rounded px-3 py-2 hover:bg-slate-100" href="{route('admin.settings.system')}"><i class="ti ti-settings admin-nav-icon" aria-hidden="true"></i>{=t('admin.site_settings')}</a>
+                <a class="admin-nav-link flex items-center gap-2 rounded px-3 py-2 hover:bg-slate-100" href="{route('admin.languages.index')}"><i class="ti ti-language admin-nav-icon" aria-hidden="true"></i>{=t('语言管理')}</a>
+                <a class="admin-nav-link flex items-center gap-2 rounded px-3 py-2 hover:bg-slate-100" href="{route('admin.plugins.index')}"><i class="ti ti-plug admin-nav-icon" aria-hidden="true"></i>{=t('admin.plugins')}</a>
+                {/if}
+                {if $canTools}<p class="px-3 pt-6 text-xs text-slate-400">{=t('admin.tools')}</p>
+                <a class="admin-nav-link flex items-center gap-2 rounded px-3 py-2 hover:bg-slate-100" href="{route('admin.themes.index')}"><i class="ti ti-palette admin-nav-icon" aria-hidden="true"></i>{=t('admin.theme_editor')}</a>
+                <a class="admin-nav-link flex items-center gap-2 rounded px-3 py-2 hover:bg-slate-100" href="{route('admin.database.index')}"><i class="ti ti-database admin-nav-icon" aria-hidden="true"></i>{=t('admin.database')}</a>
+                <a class="admin-nav-link flex items-center gap-2 rounded px-3 py-2 hover:bg-slate-100" href="{route('admin.cache.index')}"><i class="ti ti-bolt admin-nav-icon" aria-hidden="true"></i>{=t('admin.cache')}</a>
+                <a class="admin-nav-link flex items-center gap-2 rounded px-3 py-2 hover:bg-slate-100" href="{route('admin.logs.index')}"><i class="ti ti-notes admin-nav-icon" aria-hidden="true"></i>{=t('admin.logs')}</a>
+                {/if}
+                {if $canAccounts}<p class="px-3 pt-6 text-xs text-slate-400">{=t('admin.account')}</p>
+                <a class="admin-nav-link flex items-center gap-2 rounded px-3 py-2 hover:bg-slate-100" href="{route('admin.users.index')}"><i class="ti ti-users admin-nav-icon" aria-hidden="true"></i>{=t('admin.users')}</a>
+                <a class="admin-nav-link flex items-center gap-2 rounded px-3 py-2 hover:bg-slate-100" href="{route('admin.roles.index')}"><i class="ti ti-shield-lock admin-nav-icon" aria-hidden="true"></i>{=t('角色管理')}</a>
+                {/if}
+            </nav>
+            <div class="mt-8 border-t pt-5 text-sm"><a class="admin-nav-link block rounded px-3 py-2 hover:bg-slate-100" href="{route('admin.profile')}">{=t('admin.profile')}</a><a class="block rounded px-3 py-2 hover:bg-slate-100" href="{route('home')}" target="_blank" rel="noopener">{=t('admin.view_site')}</a><form method="post" action="{route('logout')}"><input type="hidden" name="_token" value="{$csrfToken ?? ''}"><button class="w-full rounded px-3 py-2 text-left hover:bg-slate-100">{=t('admin.logout')}</button></form></div>
+        </aside>
+        <main class="flex min-w-0 flex-col p-5 lg:h-full lg:overflow-y-auto lg:p-8">
+            <div class="mx-auto w-full max-w-7xl flex-1">
+                <header class="rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm lg:px-6">
+                    <nav class="admin-breadcrumb flex items-center gap-2 text-xs text-slate-400" aria-label="{=t('admin.breadcrumb')}">
+                        <a class="transition-colors hover:text-slate-600" href="{route('admin.dashboard')}">{=t('admin.home')}</a>
+                        <span aria-hidden="true">/</span>
+                        <span class="text-slate-500" aria-current="page">{$pageTitle}</span>
+                    </nav>
+                    <div class="mt-2 flex items-center justify-between gap-4">
+                        <h1 class="text-2xl font-bold">{$pageTitle}</h1>
+                        <div class="flex shrink-0 items-center gap-2">{block headerActions}{/block}</div>
+                    </div>
+                </header>
+                <div class="page-content mt-6">{block content}{/block}</div>
+            </div>
+            <footer class="mx-auto mt-10 w-full max-w-7xl border-t pt-5 text-center text-xs text-slate-400">{=t('admin.powered_by', ['version' => $coreVersion])}</footer>
+        </main>
+    </div>
+    {include 'partials/danger-confirmation.jst'}
+    {block scripts}{/block}
+<script n:syntax="off">
+    const feedbackUrl = new URL(window.location.href);
+    if (feedbackUrl.searchParams.get('_feedback') === 'saved') {
+        const feedback = document.getElementById('admin-form-feedback');
+        const feedbackClose = document.getElementById('admin-form-feedback-close');
+        feedback.classList.add('is-visible');
+        feedbackClose.focus();
+        feedbackUrl.searchParams.delete('_feedback');
+        window.history.replaceState({}, '', feedbackUrl.pathname + feedbackUrl.search + feedbackUrl.hash);
+        const closeFeedback = () => {
+            feedback.classList.remove('is-visible');
+        };
+        const feedbackTimeout = window.setTimeout(closeFeedback, 4000);
+        feedbackClose.addEventListener('click', () => {
+            window.clearTimeout(feedbackTimeout);
+            closeFeedback();
+        });
+    }
+
+    const dangerConfirmationDialog = document.getElementById('danger-confirmation-dialog');
+    const dangerConfirmationTitle = document.getElementById('danger-confirmation-title');
+    const dangerConfirmationMessage = document.getElementById('danger-confirmation-message');
+    const dangerConfirmationCancel = document.getElementById('danger-confirmation-cancel');
+    const dangerConfirmationSubmit = document.getElementById('danger-confirmation-submit');
+    let pendingDangerForm = null;
+
+    const resetDangerForm = (form) => {
+        if (form?.dataset.confirmResetOnCancel !== 'true') return;
+
+        form.reset();
+        form.querySelector('input[type="checkbox"]')?.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    document.addEventListener('submit', (event) => {
+        const form = event.target instanceof HTMLFormElement ? event.target : null;
+        const trigger = event.submitter instanceof HTMLElement ? event.submitter : null;
+        const confirmation = trigger?.dataset.confirmTitle ? trigger : form;
+        if (!form || !confirmation?.dataset.confirmTitle) return;
+        if (form.dataset.confirmed === 'true') {
+            delete form.dataset.confirmed;
+            return;
+        }
+
+        event.preventDefault();
+        pendingDangerForm = form;
+        dangerConfirmationTitle.textContent = confirmation.dataset.confirmTitle;
+        dangerConfirmationMessage.textContent = confirmation.dataset.confirmMessage || '';
+        dangerConfirmationSubmit.textContent = confirmation.dataset.confirmAction || dangerConfirmationDialog.dataset.defaultConfirm;
+        dangerConfirmationDialog.showModal();
+        dangerConfirmationCancel.focus();
+    });
+
+    dangerConfirmationCancel.addEventListener('click', () => dangerConfirmationDialog.close('cancel'));
+    dangerConfirmationSubmit.addEventListener('click', () => {
+        const form = pendingDangerForm;
+        if (!form) return;
+
+        form.dataset.confirmed = 'true';
+        dangerConfirmationDialog.close('confirm');
+        form.requestSubmit();
+    });
+    dangerConfirmationDialog.addEventListener('click', (event) => {
+        if (event.target === dangerConfirmationDialog) dangerConfirmationDialog.close('cancel');
+    });
+    dangerConfirmationDialog.addEventListener('close', () => {
+        if (dangerConfirmationDialog.returnValue !== 'confirm') resetDangerForm(pendingDangerForm);
+        pendingDangerForm = null;
+    });
+
+    const currentPath = window.location.pathname;
+    const links = Array.from(document.querySelectorAll('.admin-nav-link'));
+    const candidates = links.filter((link) => {
+        const path = link.getAttribute('href');
+        return path === '/admin' ? currentPath === path : currentPath === path || currentPath.startsWith(`${path}/`);
+    });
+    candidates.sort((a, b) => b.getAttribute('href').length - a.getAttribute('href').length);
+    if (candidates[0]) candidates[0].classList.add('is-active');
+    window.addEventListener('load', () => {
+        document.querySelectorAll('.list-toolbar').forEach((toolbar) => {
+            const columnsForm = toolbar.querySelector('.list-columns-form');
+            const storageKey = toolbar.dataset.columnsKey;
+            if (!columnsForm || !storageKey) return;
+
+            const url = new URL(window.location.href);
+            if (!url.searchParams.has('columns[]')) {
+                let savedColumns = null;
+                try {
+                    savedColumns = JSON.parse(window.localStorage.getItem(storageKey) || 'null');
+                } catch (error) {
+                    window.localStorage.removeItem(storageKey);
+                }
+                if (Array.isArray(savedColumns) && savedColumns.length > 0) {
+                    savedColumns.forEach((column) => url.searchParams.append('columns[]', column));
+                    window.location.replace(url.toString());
+                    return;
+                }
+            }
+
+            columnsForm.addEventListener('submit', (event) => {
+                if (event.submitter?.name === 'reset_columns') {
+                    window.localStorage.removeItem(storageKey);
+                    return;
+                }
+
+                const columns = [...new FormData(columnsForm).getAll('columns[]')]
+                    .map((column) => String(column));
+                window.localStorage.setItem(storageKey, JSON.stringify([...new Set(columns)]));
+            });
+        });
+
+        document.querySelectorAll('[data-code-editor]').forEach((mount) => {
+            const input = document.getElementById(mount.dataset.input);
+            if (!input || !window.CodeFlask) return;
+            const editor = new CodeFlask(mount, {
+                language: mount.dataset.codeLanguage || 'markup',
+                lineNumbers: true,
+                tabSize: 4,
+                handleTabs: true,
+                handleNewLineIndentation: true,
+                ariaLabelledby: mount.dataset.ariaLabelledby || null,
+            });
+            editor.updateCode(input.value);
+            const syncCodeScroll = () => {
+                editor.elPre.style.transform = 'none';
+                editor.elCode.style.transform = `translate3d(-${editor.elTextarea.scrollLeft}px, -${editor.elTextarea.scrollTop}px, 0)`;
+            };
+            editor.elTextarea.addEventListener('scroll', syncCodeScroll);
+            editor.elTextarea.scrollLeft = 0;
+            editor.elTextarea.scrollTop = 0;
+            syncCodeScroll();
+            mount.codeEditor = editor;
+            editor.onUpdate((code) => {
+                input.value = code;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+        });
+        document.querySelectorAll('.content-body-editor').forEach((editor) => {
+            const format = editor.querySelector('[data-body-format]');
+            const toggle = editor.querySelector('[data-html-toggle]');
+            const markdownPanel = editor.querySelector('[data-markdown-panel]');
+            const htmlPanel = editor.querySelector('[data-html-panel]');
+            const markdown = editor.querySelector('[data-markdown-source]');
+            const html = editor.querySelector('[data-html-source]');
+            const preview = editor.querySelector('[data-html-preview]');
+            const update = () => {
+                if (toggle) format.value = toggle.checked ? 'html_document' : 'markdown';
+                const isMarkdown = format.value === 'markdown';
+                markdownPanel.classList.toggle('hidden', !isMarkdown);
+                htmlPanel.classList.toggle('hidden', isMarkdown);
+                markdown.disabled = !isMarkdown;
+                html.disabled = isMarkdown;
+                html.name = isMarkdown ? '' : markdown.name;
+                if (!isMarkdown) {
+                    html.value = html.value || markdown.value;
+                    htmlPanel.querySelector('[data-code-editor]')?.codeEditor?.updateCode(html.value);
+                    preview.classList.toggle('hidden', format.value !== 'html_document');
+                    preview.srcdoc = html.value;
+                }
+            };
+            if (toggle) toggle.addEventListener('change', update);
+            html.addEventListener('input', () => { preview.srcdoc = html.value; });
+            update();
+        });
+    });
+</script>
+</body>
+</html>

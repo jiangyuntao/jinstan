@@ -1,0 +1,8 @@
+<div class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+    <input name="{$field['inputName']}" type="hidden" value="0">
+    <label class="admin-choice admin-choice--block text-sm font-semibold" for="field-{$field['name']}">
+        <input id="field-{$field['name']}" name="{$field['inputName']}" type="checkbox" value="1"{if $field['value']} checked{/if}>
+        {$field['label']}
+    </label>
+    {ifset $field['help']}<p class="mt-2 pl-7 text-xs text-slate-500">{$field['help']}</p>{/ifset}
+</div>

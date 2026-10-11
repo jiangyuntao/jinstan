@@ -1,0 +1,21 @@
+{
+  "name": "jinstan-cms-assets",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build-assets.mjs"
+  },
+  "dependencies": {
+    "@tabler/icons-webfont": "3.35.0",
+    "alpinejs": "3.15.0",
+    "chart.js": "4.5.0",
+    "codeflask": "1.4.1",
+    "github-markdown-css": "5.9.0"
+  },
+  "overrides": {
+    "sharp": "0.35.5"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.9",
+    "lightningcss": "1.30.1"
+  }
+}

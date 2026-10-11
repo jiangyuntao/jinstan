@@ -1,0 +1,43 @@
+<div{if $field['imagesOnly']} x-data="imageUpload(JSON.parse(document.getElementById('image-previews-{$field['name']}').textContent), {$field['multiple'] ? 'true' : 'false'})"{/if}>
+    {if $field['imagesOnly']}<script id="image-previews-{$field['name']}" type="application/json">{$field['previewJson']|noescape}</script>{/if}
+    {if $field['imagesOnly']}<div class="block text-sm font-semibold text-slate-800">{$field['label']}{if $field['required']}<span class="ml-1 text-red-500" aria-hidden="true">*</span>{/if}</div>{else}<label class="block text-sm font-semibold text-slate-800" for="field-{$field['name']}">{$field['label']}{if $field['required']}<span class="ml-1 text-red-500" aria-hidden="true">*</span>{/if}</label>{/if}
+    {if $field['imagesOnly']}
+    <div class="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <div class="flex flex-wrap gap-3" x-show="items.length">
+            <template x-for="(item, index) in items" :key="item.key">
+                <div class="rounded-lg border border-slate-200 bg-white p-2"{if $field['multiple']} @dragover.prevent="dragOver(index)" @drop.prevent="drop(index)"{/if}>
+                    <img class="rounded-md" :src="item.url" alt="" style="width: 10rem; height: 7.5rem; object-fit: contain;{if $field['multiple']} cursor: grab;{/if}"{if $field['multiple']} draggable="true" @dragstart="dragStart(index, $event)" @dragend="dragEnd($event)"{/if}>
+                    <div class="mt-2 flex items-center justify-center gap-1">
+                        {if $field['multiple']}<span class="px-2 py-1 text-xs text-slate-400" title="{=t('fields.image_drag')}" aria-label="{=t('fields.image_drag')}"><i class="ti ti-grip-vertical" aria-hidden="true"></i></span>{/if}
+                        <button class="rounded px-2 py-1 text-xs text-slate-700 hover:bg-slate-100" type="button" @click="openCrop(index)" aria-label="{=t('fields.image_crop')}"><i class="ti ti-crop" aria-hidden="true"></i></button>
+                        <button class="rounded px-2 py-1 text-xs text-slate-700 hover:bg-slate-100" type="button" @click="rotate(index, -90)" aria-label="{=t('fields.image_rotate_left')}"><i class="ti ti-rotate-2" aria-hidden="true"></i></button>
+                        <button class="rounded px-2 py-1 text-xs text-slate-700 hover:bg-slate-100" type="button" @click="rotate(index, 90)" aria-label="{=t('fields.image_rotate_right')}"><i class="ti ti-rotate-clockwise-2" aria-hidden="true"></i></button>
+                        <button class="rounded px-2 py-1 text-xs text-red-700 hover:bg-red-50" type="button" @click="remove(index)" aria-label="{=t('fields.image_remove')}"><i class="ti ti-trash" aria-hidden="true"></i></button>
+                    </div>
+                    {if $field['multiple']}<input type="hidden" name="media_order[{$field['name']}][]" :value="item.path || 'new'">{/if}
+                </div>
+            </template>
+        </div>
+        <p class="text-sm text-slate-500" x-show="!items.length">{=t('fields.image_empty')}</p>
+        <div class="mt-3 flex flex-wrap items-center gap-2">
+            <button class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50" type="button" @click="$refs.input.click()">{if $field['multiple']}{=t('fields.images_add')}{else}{=t('fields.image_choose')}{/if}</button>
+        </div>
+    </div>
+    <div class="fixed z-20 flex items-center justify-center p-6" style="inset: 0; background: rgba(15, 23, 42, .4);" x-show="crop.open" x-cloak @keydown.escape.window="closeCrop()">
+        <div class="w-full rounded-2xl bg-white p-6 shadow-xl" style="max-width: 48rem;" @click.outside="closeCrop()">
+            <h3 class="text-lg font-semibold text-slate-900">{=t('fields.image_crop')}</h3>
+            <p class="mt-1 text-sm text-slate-500">{=t('fields.image_crop_help')}</p>
+            <div class="mt-4 overflow-auto rounded-lg bg-slate-950 p-2 text-center"><canvas x-ref="cropCanvas" style="max-width: 100%; touch-action: none;" @pointerdown="cropStart($event)" @pointermove="cropMove($event)" @pointerup="cropEnd($event)" @pointercancel="cropEnd($event)"></canvas></div>
+            <div class="mt-4 flex justify-end gap-3"><button class="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-100" type="button" @click="closeCrop()">{=t('取消')}</button><button class="rounded-lg bg-slate-950 px-4 py-2 text-sm font-medium text-white disabled:bg-slate-300" type="button" @click="applyCrop()" :disabled="crop.width < 2 || crop.height < 2">{=t('fields.image_crop_apply')}</button></div>
+        </div>
+    </div>
+    <input class="hidden" x-ref="input" id="field-{$field['name']}" name="{$field['inputName']}{if $field['multiple']}[]{/if}" type="file" accept="{$field['accept']}" aria-label="{$field['label']}" @change="select($event)"{if $field['multiple']} multiple{/if}>
+    {if $field['multiple']}<input type="hidden" name="manage_media[{$field['name']}]" value="1">{/if}
+    <input type="hidden" name="remove_media[{$field['name']}]" :value="removed ? '1' : '0'">
+    {else}
+    <input class="mt-2 block w-full cursor-pointer border bg-white px-3 py-2 text-sm text-slate-700 file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100" id="field-{$field['name']}" name="{$field['inputName']}{if $field['multiple']}[]{/if}" type="file" accept="{$field['accept']}"{if $field['multiple']} multiple{/if}>
+    {/if}
+    {if !$field['imagesOnly'] && !empty($field['attachments'])}<div class="mt-2 space-y-1 text-xs text-slate-500">{foreach $field['attachments'] as $attachment}<p class="flex items-center gap-1"><i class="ti ti-paperclip" aria-hidden="true"></i><span class="truncate">{=t('fields.current_file', ['name' => $attachment['name']])}</span></p>{/foreach}</div>{/if}
+    <p class="mt-2 text-xs text-slate-500">{if $field['imagesOnly']}{=t('fields.image_help')}{else}{=t('仅支持 JPEG、PNG、WebP 和 PDF，单个文件不超过 10 MB。重新上传会替换当前文件。')}{/if}</p>
+    {ifset $field['help']}<p class="mt-2 text-xs text-slate-500">{$field['help']}</p>{/ifset}
+</div>

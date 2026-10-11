@@ -1,0 +1,22 @@
+{
+    "name": "external-order",
+    "version": "1.0.0",
+    "author": "Jinstan",
+    "class": "Jinstan\\Plugins\\ExternalOrderPlugin\\Plugin",
+    "settings": [
+        {
+            "key": "submit_url",
+            "label": "订单提交 URL",
+            "type": "url",
+            "default": "",
+            "help": "留空时使用内置 Fake Gateway；填写后以 JSON POST 请求提交订单。"
+        },
+        {
+            "key": "parameters",
+            "label": "接收参数",
+            "type": "json",
+            "default": "{\"product_id\":\"product_id\",\"email\":\"email\"}",
+            "help": "JSON 对象：键是目标 URL 接收的参数名，值是订单数据来源；当前支持 product_id 和 email。"
+        }
+    ]
+}

@@ -1,0 +1,5 @@
+{extends 'layout.jst'}
+{block headerActions}<form method="post" action="{route('admin.cache.clear')}" data-confirm-title="{=t('清除全部缓存？')}" data-confirm-message="{=t('全部缓存文件将被清除，后续请求会重新生成缓存。')}" data-confirm-action="{=t('清除缓存')}"><input name="_token" type="hidden" value="{$csrfToken}"><button class="admin-button inline-flex items-center gap-2 px-4 py-2 text-sm" type="submit"><i class="ti ti-trash" aria-hidden="true"></i>{=t('清除全部缓存')}</button></form>{/block}
+{block content}
+<p class="text-sm text-slate-500">{=t('缓存目录按实际占用空间统计。')}</p><section class="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"><dl class="divide-y">{foreach $caches as $cache}<div class="flex items-center justify-between gap-4 px-5 py-4"><dt><p class="font-medium">{$cache['name']}</p><p class="mt-1 text-xs text-slate-500">{$cache['path']}</p></dt><dd class="text-sm font-semibold" title="{=number_format($cache['size'])} B">{$cache['sizeLabel']}</dd></div>{/foreach}</dl></section>
+{/block}

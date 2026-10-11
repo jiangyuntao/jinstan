@@ -1,0 +1,5 @@
+{extends 'layout.jst'}
+{block headerActions}<form method="post" action="{route('admin.logs.clear')}" data-confirm-title="{=t('清除应用日志？')}" data-confirm-message="{=t('现有日志内容将被永久清除，无法恢复。')}" data-confirm-action="{=t('清除日志')}"><input name="_token" type="hidden" value="{$csrfToken}"><button class="admin-button inline-flex items-center gap-2 px-4 py-2 text-sm" type="submit"><i class="ti ti-trash" aria-hidden="true"></i>{=t('清除日志')}</button></form>{/block}
+{block content}
+<p class="text-sm text-slate-500" title="{=number_format($size)} B">{=t('logs.size_help', ['size' => $sizeLabel])}</p><pre class="mt-6 max-h-[32rem] overflow-auto rounded-xl bg-slate-950 p-5 text-xs leading-6 text-slate-200">{$log}</pre>
+{/block}

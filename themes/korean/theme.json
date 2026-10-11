@@ -1,0 +1,11 @@
+{
+    "name": "Korean",
+    "version": "1.0.0",
+    "homepageTemplate": "homepage",
+    "templates": {
+        "homepage": {
+            "label": "기본 홈페이지",
+            "kind": "homepage"
+        }
+    }
+}

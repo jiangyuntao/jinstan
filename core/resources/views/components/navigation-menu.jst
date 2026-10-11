@@ -1,0 +1,1 @@
+{if $items}<nav aria-label="网站导航"><ul class="flex flex-wrap items-center gap-4">{foreach $items as $item}<li><a href="{$item['url']}" target="{$item['target']}"{if $item['target'] === '_blank'} rel="noopener noreferrer"{/if}>{$item['label']}</a></li>{/foreach}</ul></nav>{/if}

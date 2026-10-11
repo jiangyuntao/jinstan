@@ -1,0 +1,39 @@
+{
+    "name": "Default",
+    "version": "1.0.0",
+    "homepageTemplate": "homepage",
+    "templates": {
+        "homepage": {
+            "label": "默认首页",
+            "kind": "homepage"
+        },
+        "article-list": {
+            "label": "文章列表",
+            "kind": "list"
+        },
+        "product-list": {
+            "label": "产品列表",
+            "kind": "list"
+        },
+        "content-list": {
+            "label": "通用内容列表",
+            "kind": "list"
+        },
+        "article-detail": {
+            "label": "文章详情",
+            "kind": "detail"
+        },
+        "product-detail": {
+            "label": "产品详情",
+            "kind": "detail"
+        },
+        "page-detail": {
+            "label": "独立页面",
+            "kind": "detail"
+        },
+        "content-detail": {
+            "label": "通用内容详情",
+            "kind": "detail"
+        }
+    }
+}

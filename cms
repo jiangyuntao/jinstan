@@ -1,0 +1,49 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Jinstan\Core\Infrastructure\Database\ConnectionFactory;
+use Jinstan\Core\Infrastructure\Database\MigrationRunner;
+use Jinstan\Core\Infrastructure\Filesystem\Assets\CoreAssetManifestBuilder;
+
+require __DIR__ . '/core/vendor/autoload.php';
+
+$command = $argv[1] ?? 'help';
+
+if (in_array($command, ['help', '--help', '-h'], true)) {
+    print "Usage: php cms <command>\n\nCommands:\n  assets:manifest  Generate the Core asset manifest\n  database:status  Show database and migration status\n  migrate          Apply pending Core migrations\n";
+    exit(0);
+}
+
+if ($command === 'assets:manifest') {
+    $manifest = (new CoreAssetManifestBuilder())->build(__DIR__ . '/core', __DIR__ . '/public');
+    print sprintf("Core 资源清单已生成：%s\n", $manifest);
+    exit(0);
+}
+
+$database = require __DIR__ . '/config/database.php';
+if ($database === []) {
+    fwrite(STDERR, "Jinstan 尚未安装，请先访问 /install。\n");
+    exit(1);
+}
+
+$connection = (new ConnectionFactory())->create($database);
+
+match ($command) {
+    'database:status' => print(sprintf(
+        "Driver: %s\nMigrations: %d executed\n",
+        $connection->driver(),
+        $connection->tablesExist(['migration_versions'])
+            ? (int) $connection->fetchOne('SELECT COUNT(*) FROM migration_versions')
+            : 0,
+    )),
+    'migrate' => (function () use ($connection): void {
+        (new MigrationRunner())->migrate($connection, __DIR__ . '/core/src/Database/Migrations');
+        print "数据库迁移完成。\n";
+    })(),
+    default => (function () use ($command): never {
+        fwrite(STDERR, sprintf("未知命令：%s\n", $command));
+        exit(1);
+    })(),
+};

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="{$locale ?? 'en'}" dir="{$direction ?? 'ltr'}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{$seo_title}</title>
+    {include '../partials/styles.jst'}
+    {if $site['sns']}<link rel="stylesheet" href="{=coreAsset('icons.css')}">{/if}
+    {$seo_tags}
+</head>
+<body class="theme-site">
+    <a class="skip-link" href="#main-content">跳到正文</a>
+    {var $navigation = hasComponent('navigation-menu') ? component('navigation-menu', ['handle' => 'primary', 'locale' => $locale]) : ''}
+    {var $footerNavigation = hasComponent('navigation-menu') ? component('navigation-menu', ['handle' => 'footer', 'locale' => $locale]) : ''}
+    <header class="site-header">
+        <div class="site-width header-inner">
+            <a class="brand" href="/" aria-label="{$site['name']} 首页"><span class="brand-mark" aria-hidden="true"></span><span>{$site['name']}</span></a>
+            <input class="nav-toggle" id="site-navigation-toggle" type="checkbox">
+            <label class="menu-toggle" for="site-navigation-toggle" aria-label="打开网站导航">菜单</label>
+            <div class="header-nav">{if $navigation}{$navigation}{else}<nav aria-label="网站导航"><ul class="primary-menu"><li><a href="/">首页</a></li></ul></nav>{/if}</div>
+        </div>
+    </header>
+    <main id="main-content" class="site-width site-main" tabindex="-1">{block content}{/block}</main>
+    <footer class="site-footer"><div class="site-width footer-inner"><div><strong>{$site['name']}</strong>{if $site['tagline']}<p>{$site['tagline']}</p>{/if}{if $site['footer']}<p>{$site['footer']|breaklines}</p>{/if}</div><div>{if $footerNavigation}<div class="footer-navigation">{$footerNavigation}</div>{/if}{if $site['contactEmail']}<a href="mailto:{$site['contactEmail']}">{$site['contactEmail']}</a>{/if}{if $site['sns']}<nav class="footer-sns" aria-label="SNS">{foreach $site['sns'] as $sns}<a href="{$sns['url']}" target="_blank" rel="noopener noreferrer" aria-label="{$sns['label']}" title="{$sns['label']}"><i class="ti {$sns['icon']}" aria-hidden="true"></i><span class="visually-hidden">{$sns['label']}</span></a>{/foreach}</nav>{/if}</div></div></footer>
+</body>
+</html>

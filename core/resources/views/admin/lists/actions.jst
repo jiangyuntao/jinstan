@@ -1,0 +1,7 @@
+<div class="flex items-center justify-center gap-3 whitespace-nowrap">
+    <a class="inline-flex items-center gap-1 font-medium text-blue-700 hover:text-blue-900" href="{$row['editUrl']}"><i class="ti ti-pencil" aria-hidden="true"></i>{=t('编辑')}</a>
+    <form method="post" action="{$row['deleteUrl']}" data-confirm-title="{=t('删除此内容？')}" data-confirm-message="{=t('内容及其翻译和关联关系将被永久删除，无法撤销。')}" data-confirm-action="{=t('删除内容')}">
+        <input type="hidden" name="_token" value="{$field['csrfToken']}">
+        <button class="inline-flex items-center gap-1 font-medium text-red-600 hover:text-red-800" type="submit"><i class="ti ti-trash" aria-hidden="true"></i>{=t('删除')}</button>
+    </form>
+</div>

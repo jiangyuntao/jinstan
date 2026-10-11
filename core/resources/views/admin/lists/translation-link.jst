@@ -1,0 +1,2 @@
+<a class="font-medium text-blue-700 hover:text-blue-900" href="{$row[$field['url']]}">{$row[$field['name']]}</a>
+{if !$row['translated']}<span class="ml-2 rounded-full bg-amber-50 px-2 py-1 text-xs text-amber-700">{=t('未翻译 · 原文')} {$row['sourceLocaleName']} ({$row['sourceLocale']})</span>{/if}

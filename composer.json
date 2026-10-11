@@ -1,0 +1,45 @@
+{
+    "name": "jinstan/cms",
+    "description": "A lightweight, extensible CMS for SEO-focused content sites.",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "latte/latte": "^3.1",
+        "league/commonmark": "^2.6",
+        "monolog/monolog": "^3.0",
+        "nikic/fast-route": "^1.3",
+        "nyholm/psr7": "^1.8",
+        "nyholm/psr7-server": "^1.1",
+        "psr/container": "^2.0",
+        "psr/http-message": "^2.0"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Jinstan\\Core\\": "core/src/",
+            "Jinstan\\Site\\": "site/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Jinstan\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "lint": "php core/vendor/bin/php-cs-fixer fix --dry-run --sequential",
+        "docs": "php scripts/validate-docs.php",
+        "build-core": "composer install --no-dev --classmap-authoritative --no-interaction"
+    },
+    "config": {
+        "platform": {
+            "php": "8.3.0"
+        },
+        "sort-packages": true,
+        "vendor-dir": "core/vendor"
+    }
+}

@@ -1,0 +1,159 @@
+{extends 'layout.jst'}
+
+{block content}
+<section class="w-full">
+    <p class="text-sm text-slate-500">{=t('theme.manager_help')}</p>
+
+    <div class="theme-workspace mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm" x-data="{
+        newFileDirectory: null,
+        newDirectoryParent: null,
+        creatingTheme: false,
+        renamingDirectory: null,
+        renameDirectoryName: '',
+        themeOpen: true,
+        closedDirectories: {},
+        directoryOpen(path) {
+            return !this.closedDirectories[path];
+        },
+        toggleDirectory(path) {
+            this.closedDirectories[path] = !this.closedDirectories[path];
+        },
+        entryVisible(path) {
+            if (!this.themeOpen) return false;
+            const parts = path.split('/');
+            parts.pop();
+            let parent = '';
+            return parts.every((part) => {
+                parent = parent === '' ? part : parent + '/' + part;
+                return this.directoryOpen(parent);
+            });
+        }
+    }">
+        <aside class="theme-file-explorer border-b border-slate-200 bg-slate-50/70 p-4">
+            <div class="flex items-center justify-between gap-3 px-2">
+                <h2 class="text-sm font-semibold">{=t('theme.file_explorer')}</h2>
+                <button class="flex h-8 w-8 items-center justify-center rounded-lg text-blue-700 hover:bg-blue-50" type="button" @click="creatingTheme = true" title="{=t('theme.create')}" aria-label="{=t('theme.create')}"><i class="ti ti-plus" aria-hidden="true"></i></button>
+                <div class="theme-create-modal" x-cloak x-show="creatingTheme" @keydown.escape.window="creatingTheme = false" @click.self="creatingTheme = false">
+                    <form class="theme-create-dialog space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-xl" method="post" action="{route('admin.themes.create')}">
+                        <input type="hidden" name="_token" value="{$csrfToken}">
+                        <div class="flex items-center justify-between gap-3"><h3>{=t('theme.create')}</h3><button class="rounded p-1 text-slate-400 hover:bg-slate-100" type="button" @click="creatingTheme = false" aria-label="{=t('admin.cancel')}"><i class="ti ti-x" aria-hidden="true"></i></button></div>
+                        <p class="rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-800"><i class="ti ti-info-circle mr-1" aria-hidden="true"></i>{=t('theme.create_scaffold_help')}</p>
+                        <div><label class="block text-sm font-medium" for="theme-handle">{=t('theme.handle')}</label><input class="mt-1 block w-full font-mono text-sm" id="theme-handle" name="handle" required pattern="[A-Za-z0-9][A-Za-z0-9._-]&#123;0,99&#125;"></div>
+                        <div><label class="block text-sm font-medium" for="theme-name">{=t('theme.name')}</label><input class="mt-1 block w-full text-sm" id="theme-name" name="name"></div>
+                        <div class="flex justify-end border-t border-slate-100 pt-4"><button class="admin-button px-4 py-2.5 text-sm" type="submit">{=t('theme.create')}</button></div>
+                    </form>
+                </div>
+            </div>
+
+            <nav class="mt-3 select-none" id="theme-file-tree" aria-label="{=t('theme.file_explorer')}" role="tree">
+                {foreach $themes as $item}
+                    <div role="treeitem"{if $item === $theme} :aria-expanded="themeOpen.toString()"{/if}>
+                        <div class="theme-tree-row group flex items-center rounded px-1{if $item === $theme} font-semibold text-blue-700{/if}">
+                            {if $item === $theme}
+                                <button class="theme-tree-toggle rounded" type="button" @click="themeOpen = !themeOpen" :aria-expanded="themeOpen.toString()" aria-label="{$item}"><i class="ti ti-chevron-right text-xs transition-transform" :class="themeOpen && 'rotate-90'" aria-hidden="true"></i></button>
+                            {else}
+                                <span class="theme-tree-toggle" aria-hidden="true"></span>
+                            {/if}
+                            <a class="flex min-w-0 flex-1 items-center gap-1.5 py-1 font-mono text-sm" href="{route('admin.themes.index', ['theme' => $item])}"><i class="ti {if $item === $theme}ti-folder-open{else}ti-folder{/if} text-amber-500" aria-hidden="true"></i><span class="truncate">{$item}</span></a>
+                            {if $item === $theme}
+                                <span class="theme-tree-actions flex items-center">
+                                    <button class="rounded p-1 text-slate-500 hover:text-blue-700" type="button" data-path="" @click="newFileDirectory = $el.dataset.path; newDirectoryParent = null" title="{=t('theme.new_file_in', ['name' => '/'])}" aria-label="{=t('theme.new_file_in', ['name' => '/'])}"><i class="ti ti-file-plus" aria-hidden="true"></i></button>
+                                    <button class="rounded p-1 text-slate-500 hover:text-blue-700" type="button" data-path="" @click="newDirectoryParent = $el.dataset.path; newFileDirectory = null" title="{=t('theme.new_directory_in', ['name' => '/'])}" aria-label="{=t('theme.new_directory_in', ['name' => '/'])}"><i class="ti ti-folder-plus" aria-hidden="true"></i></button>
+                                    {if $canDeleteTheme}
+                                        <form method="post" action="{route('admin.themes.delete')}" data-confirm-title="{=t('theme.delete_title', ['name' => $theme])}" data-confirm-message="{=t('theme.delete_message', ['name' => $theme])}" data-confirm-action="{=t('theme.delete')}">
+                                            <input type="hidden" name="_token" value="{$csrfToken}"><input type="hidden" name="theme" value="{$theme}"><input type="hidden" name="confirm" value="{$theme}">
+                                            <button class="rounded p-1 text-red-600" type="submit" aria-label="{=t('theme.delete_title', ['name' => $theme])}" title="{=t('theme.delete')}"><i class="ti ti-trash" aria-hidden="true"></i></button>
+                                        </form>
+                                    {/if}
+                                </span>
+                            {/if}
+                        </div>
+
+                        {if $item === $theme}
+                            <div role="group">
+                                {foreach $entries as $entry}
+                                    {if $entry['directory']}
+                                        <div class="theme-tree-row theme-tree-directory flex items-center rounded pr-1 text-slate-600" role="treeitem" data-entry-path="{$entry['path']}" data-tree-depth="{$entry['depth'] + 1}" x-cloak x-show="entryVisible($el.dataset.entryPath)" :aria-expanded="directoryOpen($el.dataset.entryPath).toString()" style="padding-left: {=(($entry['depth'] + 1) * 24)}px">
+                                            <button class="theme-tree-toggle rounded" type="button" data-path="{$entry['path']}" @click="toggleDirectory($el.dataset.path)" aria-label="{$entry['name']}"><i class="ti ti-chevron-right text-xs transition-transform" :class="directoryOpen($el.parentElement.dataset.entryPath) && 'rotate-90'" aria-hidden="true"></i></button>
+                                            <button class="flex min-w-0 flex-1 items-center gap-1.5 py-1 text-left font-mono text-sm" type="button" data-path="{$entry['path']}" @click="toggleDirectory($el.dataset.path)"><i class="ti text-amber-500" :class="directoryOpen($el.dataset.path) ? 'ti-folder-open' : 'ti-folder'" aria-hidden="true"></i><span class="truncate">{$entry['name']}</span></button>
+                                            <span class="theme-tree-actions flex items-center">
+                                                <button class="rounded p-1 text-slate-400 hover:text-blue-700" type="button" data-path="{$entry['path']}" @click="newFileDirectory = $el.dataset.path; newDirectoryParent = null" title="{=t('theme.new_file_in', ['name' => $entry['path']])}" aria-label="{=t('theme.new_file_in', ['name' => $entry['path']])}"><i class="ti ti-file-plus" aria-hidden="true"></i></button>
+                                                <button class="rounded p-1 text-slate-400 hover:text-blue-700" type="button" data-path="{$entry['path']}" @click="newDirectoryParent = $el.dataset.path; newFileDirectory = null" title="{=t('theme.new_directory_in', ['name' => $entry['path']])}" aria-label="{=t('theme.new_directory_in', ['name' => $entry['path']])}"><i class="ti ti-folder-plus" aria-hidden="true"></i></button>
+                                                {if $theme !== 'default'}
+                                                    <button class="rounded p-1 text-slate-400 hover:text-blue-700" type="button" data-path="{$entry['path']}" data-name="{$entry['name']}" @click="renamingDirectory = $el.dataset.path; renameDirectoryName = $el.dataset.name; newFileDirectory = null; newDirectoryParent = null" title="{=t('theme.rename_directory', ['name' => $entry['path']])}" aria-label="{=t('theme.rename_directory', ['name' => $entry['path']])}"><i class="ti ti-pencil" aria-hidden="true"></i></button>
+                                                {/if}
+                                                {if $theme !== 'default'}
+                                                    <form method="post" action="{route('admin.themes.directories.delete')}" data-confirm-title="{=t('theme.directory_delete_title', ['name' => $entry['path']])}" data-confirm-message="{=t('theme.directory_delete_message')}" data-confirm-action="{=t('删除')}">
+                                                        <input type="hidden" name="_token" value="{$csrfToken}"><input type="hidden" name="theme" value="{$theme}"><input type="hidden" name="directory" value="{$entry['path']}"><input type="hidden" name="confirm" value="{$entry['path']}">
+                                                        <button class="rounded p-1 text-red-600" type="submit" aria-label="{=t('theme.directory_delete_title', ['name' => $entry['path']])}"><i class="ti ti-trash" aria-hidden="true"></i></button>
+                                                    </form>
+                                                {/if}
+                                            </span>
+                                        </div>
+                                    {else}
+                                        <div class="theme-tree-row theme-tree-file group flex items-center rounded pr-1{if $entry['path'] === $selected} is-selected font-medium{/if}" role="treeitem" data-entry-path="{$entry['path']}" data-tree-depth="{$entry['depth'] + 1}" x-cloak x-show="entryVisible($el.dataset.entryPath)" style="padding-left: {=(($entry['depth'] + 2) * 24)}px">
+                                            <a class="flex min-w-0 flex-1 items-center gap-1.5 truncate py-1 font-mono text-sm" href="{route('admin.themes.index', ['theme' => $theme, 'file' => $entry['path']])}"><i class="ti ti-file-code text-slate-400" aria-hidden="true"></i><span class="truncate">{$entry['name']}</span></a>
+                                            {if $theme !== 'default' && $entry['path'] !== 'theme.json'}
+                                                <form class="theme-tree-actions" method="post" action="{route('admin.themes.files.delete')}" data-confirm-title="{=t('theme.file_delete_title', ['name' => $entry['path']])}" data-confirm-message="{=t('theme.file_delete_message')}" data-confirm-action="{=t('theme.delete_file')}">
+                                                    <input type="hidden" name="_token" value="{$csrfToken}"><input type="hidden" name="theme" value="{$theme}"><input type="hidden" name="file" value="{$entry['path']}"><input type="hidden" name="confirm" value="{$entry['path']}">
+                                                    <button class="rounded p-1 text-red-600" type="submit" aria-label="{=t('theme.file_delete_title', ['name' => $entry['path']])}" title="{=t('theme.delete_file')}"><i class="ti ti-trash" aria-hidden="true"></i></button>
+                                                </form>
+                                            {/if}
+                                        </div>
+                                    {/if}
+                                {/foreach}
+                            </div>
+                        {/if}
+                    </div>
+                {/foreach}
+            </nav>
+
+            <div class="theme-create-modal" x-cloak x-show="newFileDirectory !== null" @keydown.escape.window="newFileDirectory = null" @click.self="newFileDirectory = null">
+                <form class="theme-create-dialog space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-xl" method="post" action="{route('admin.themes.files.create')}">
+                    <input type="hidden" name="_token" value="{$csrfToken}"><input type="hidden" name="theme" value="{$theme}"><input type="hidden" name="directory" :value="newFileDirectory || ''">
+                    <div class="flex items-center justify-between gap-3"><h3>{=t('theme.create_file')}</h3><button class="rounded p-1 text-slate-400 hover:bg-slate-100" type="button" @click="newFileDirectory = null" aria-label="{=t('admin.cancel')}"><i class="ti ti-x" aria-hidden="true"></i></button></div>
+                    <p class="rounded-lg bg-slate-50 px-3 py-2 font-mono text-xs text-slate-500" x-text="newFileDirectory ? newFileDirectory + '/' : '/'"></p>
+                    <div><label class="block text-sm font-medium" for="file-name">{=t('theme.file_name')}</label><input class="mt-1 block w-full font-mono text-sm" id="file-name" name="name" placeholder="example.jst" pattern="[A-Za-z0-9][A-Za-z0-9._-]*[.]jst" required></div>
+                    <p class="text-xs text-slate-500">{=t('theme.allowed_extensions')}</p>
+                    <div class="flex justify-end border-t border-slate-100 pt-4"><button class="admin-button px-4 py-2.5 text-sm" type="submit">{=t('theme.create_file')}</button></div>
+                </form>
+            </div>
+
+            <div class="theme-create-modal" x-cloak x-show="newDirectoryParent !== null" @keydown.escape.window="newDirectoryParent = null" @click.self="newDirectoryParent = null">
+                <form class="theme-create-dialog space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-xl" method="post" action="{route('admin.themes.directories.create')}">
+                    <input type="hidden" name="_token" value="{$csrfToken}"><input type="hidden" name="theme" value="{$theme}"><input type="hidden" name="parent" :value="newDirectoryParent || ''">
+                    <div class="flex items-center justify-between gap-3"><h3>{=t('theme.create_directory')}</h3><button class="rounded p-1 text-slate-400 hover:bg-slate-100" type="button" @click="newDirectoryParent = null" aria-label="{=t('admin.cancel')}"><i class="ti ti-x" aria-hidden="true"></i></button></div>
+                    <p class="rounded-lg bg-slate-50 px-3 py-2 font-mono text-xs text-slate-500" x-text="newDirectoryParent ? newDirectoryParent + '/' : '/'"></p>
+                    <div><label class="block text-sm font-medium" for="directory-name">{=t('theme.directory_name')}</label><input class="mt-1 block w-full font-mono text-sm" id="directory-name" name="name" required></div>
+                    <div class="flex justify-end border-t border-slate-100 pt-4"><button class="admin-button px-4 py-2.5 text-sm" type="submit">{=t('theme.create_directory')}</button></div>
+                </form>
+            </div>
+
+            <div class="theme-create-modal" x-cloak x-show="renamingDirectory !== null" @keydown.escape.window="renamingDirectory = null" @click.self="renamingDirectory = null">
+                <form class="theme-create-dialog space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-xl" method="post" action="{route('admin.themes.directories.rename')}">
+                    <input type="hidden" name="_token" value="{$csrfToken}"><input type="hidden" name="theme" value="{$theme}"><input type="hidden" name="directory" :value="renamingDirectory || ''">
+                    <div class="flex items-center justify-between gap-3"><h3>{=t('theme.rename_directory_title')}</h3><button class="rounded p-1 text-slate-400 hover:bg-slate-100" type="button" @click="renamingDirectory = null" aria-label="{=t('admin.cancel')}"><i class="ti ti-x" aria-hidden="true"></i></button></div>
+                    <p class="rounded-lg bg-slate-50 px-3 py-2 font-mono text-xs text-slate-500" x-text="renamingDirectory || ''"></p>
+                    <div><label class="block text-sm font-medium" for="rename-directory-name">{=t('theme.directory_name')}</label><input class="mt-1 block w-full font-mono text-sm" id="rename-directory-name" name="name" x-model="renameDirectoryName" required></div>
+                    <div class="flex justify-end border-t border-slate-100 pt-4"><button class="admin-button px-4 py-2.5 text-sm" type="submit">{=t('theme.rename')}</button></div>
+                </form>
+            </div>
+        </aside>
+
+        <div class="theme-editor-pane p-6">
+            {if $selected !== ''}
+                <form method="post" action="{route('admin.themes.save')}" data-confirm-title="{=t('覆盖主题文件？')}" data-confirm-message="{=t('保存会立即覆盖当前主题文件并影响网站展示。')}" data-confirm-action="{=t('覆盖文件')}">
+                    <input type="hidden" name="_token" value="{$csrfToken}"><input type="hidden" name="theme" value="{$theme}"><input type="hidden" name="file" value="{$selected}">
+                    <div class="flex items-center gap-2"><i class="ti ti-file-code text-slate-400" aria-hidden="true"></i><label class="font-mono text-sm font-semibold text-slate-800" for="theme-source">{$theme}/{$selected}</label></div>
+                    <textarea class="hidden" id="theme-source" name="source" spellcheck="false">{$source}</textarea>
+                    <div class="mt-3 code-editor" data-code-editor data-code-language="markup" data-input="theme-source"></div>
+                    <label class="mt-4 flex items-center gap-2 text-sm text-slate-700"><input name="confirm_overwrite" type="checkbox" value="1" required>{=t('我确认覆盖此主题文件')}</label>
+                    <div class="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-5"><button class="admin-button inline-flex items-center gap-2 px-4 py-2.5" type="submit"><i class="ti ti-device-floppy" aria-hidden="true"></i>{=t('保存主题文件')}</button></div>
+                </form>
+            {else}
+                <div class="grid min-h-[36rem] place-items-center text-center text-slate-500"><div><i class="ti ti-file-code text-5xl text-slate-300" aria-hidden="true"></i><p class="mt-3">{=t('theme.select_file')}</p></div></div>
+            {/if}
+        </div>
+    </div>
+</section>
+{/block}

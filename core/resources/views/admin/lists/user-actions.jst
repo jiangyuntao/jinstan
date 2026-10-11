@@ -1,0 +1,11 @@
+<div class="flex items-center justify-center gap-3 whitespace-nowrap">
+    <a class="inline-flex items-center gap-1 font-medium text-blue-700 hover:text-blue-900" href="{route('admin.users.edit', ['id' => $row['id']])}"><i class="ti ti-pencil" aria-hidden="true"></i>{=t('编辑')}</a>
+    {if $row['deletable']}
+        <form method="post" action="{route('admin.users.delete', ['id' => $row['id']])}">
+            <input type="hidden" name="_token" value="{$field['csrfToken']}">
+            <button class="inline-flex items-center gap-1 font-medium text-red-600 hover:text-red-800" data-confirm-title="{=t('删除此用户？')}" data-confirm-message="{=t('用户账号将被永久删除，无法撤销。')}" data-confirm-action="{=t('删除用户')}" type="submit"><i class="ti ti-trash" aria-hidden="true"></i>{=t('删除')}</button>
+        </form>
+    {else}
+        <span class="text-xs text-slate-400">{=t('初始管理员')}</span>
+    {/if}
+</div>

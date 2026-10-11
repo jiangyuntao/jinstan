@@ -1,0 +1,11 @@
+{extends 'layout.jst'}
+
+{block headerActions}
+    <a class="admin-button inline-flex items-center gap-2 px-4 py-2.5" href="{route('admin.users.create')}"><i class="ti ti-plus" aria-hidden="true"></i>{=t('新增用户')}</a>
+{/block}
+
+{block content}
+<section class="w-full">
+    {include 'lists/table.jst', columns: $columns, rows: $users, empty: t('users.empty'), embedded: false}
+</section>
+{/block}

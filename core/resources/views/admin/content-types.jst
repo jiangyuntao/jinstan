@@ -1,0 +1,132 @@
+{extends 'layout.jst'}
+
+{if $definition === null}
+    {block headerActions}<a class="admin-button inline-flex items-center gap-2 px-4 py-2.5" href="{route('admin.content-types.edit', ['handle' => 'new'])}"><i class="ti ti-plus" aria-hidden="true"></i>{=t('新建内容类型')}</a>{/block}
+{/if}
+
+{block content}
+<section class="w-full">
+    {if $definition === null}
+        <p class="text-sm text-slate-500">{=t('Content Type 定义内容结构；修改字段会影响后续编辑表单，不会删除已有数据。')}</p>
+        <div class="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            {foreach $items as $item}
+                <div class="flex items-center justify-between gap-4 border-b border-slate-100 p-5 hover:bg-slate-50"><a class="min-w-0 flex-1" href="{route('admin.content-types.edit', ['handle' => $item['handle']])}"><strong>{$item['label']}</strong><span class="ml-2 font-mono text-sm text-slate-500">{$item['handle']}</span></a><div class="flex items-center gap-4"><a class="text-sm text-slate-500" href="{route('admin.content-types.edit', ['handle' => $item['handle']])}">{=t('编辑 →')}</a>{if $item['deletable']}<form method="post" action="{route('admin.content-types.delete', ['handle' => $item['handle']])}" data-confirm-title="{=t('删除内容类型？')}" data-confirm-message="{=t('删除“{name}”将同时删除该类型的全部内容、翻译和关联数据，无法撤销。', ['name' => $item['label']])}" data-confirm-action="{=t('删除内容类型')}"><input type="hidden" name="_token" value="{$csrfToken}"><button class="inline-flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-800" type="submit"><i class="ti ti-trash" aria-hidden="true"></i>{=t('删除')}</button></form>{else}<span class="text-xs text-slate-400">{=t('内置')}</span>{/if}</div></div>
+            {/foreach}
+        </div>
+    {else}
+        {ifset $error}<p class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{$error}</p>{/ifset}
+        <script id="content-type-fields" type="application/json">{$fieldsJson|noescape}</script>
+        <form class="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm" method="post" action="{route('admin.content-types.save')}" x-data="contentTypeEditor(JSON.parse(document.getElementById('content-type-fields').textContent))">
+            <input type="hidden" name="_token" value="{$csrfToken}">
+            <div class="flex flex-wrap gap-1 border-b border-slate-200" role="tablist" aria-label="{=t('内容类型设置')}">
+                {foreach ['basic' => t('基础信息'), 'fields' => t('字段'), 'presentation' => t('前台展示'), 'taxonomies' => t('分类法')] as $key => $label}
+                    <button class="rounded-t-lg px-4 py-2.5 text-sm font-medium" type="button" role="tab" id="type-tab-{$key}" aria-controls="type-panel-{$key}" :class="tab === '{$key}' ? 'bg-slate-100 text-slate-950' : 'text-slate-500 hover:bg-slate-50'" :aria-selected="tab === '{$key}'" @click="tab = '{$key}'">{$label}</button>
+                {/foreach}
+            </div>
+            <section class="space-y-6 pt-6" id="type-panel-basic" role="tabpanel" aria-labelledby="type-tab-basic" x-show="tab === 'basic'" @invalid.capture="tab = 'basic'">
+                <div>
+                    <h2>{=t('基础信息')}</h2>
+                    <p class="mt-1 text-sm text-slate-500">{=t('定义内容名称、标识与层级关系。')}</p>
+                </div>
+                <div class="mt-6 grid gap-6 md:grid-cols-2">
+                    <div><label class="block text-sm font-semibold text-slate-800" for="handle">{=t('标识')}</label><input class="mt-2 block w-full" id="handle" name="handle" type="text" value="{$definition['handle'] ?? ''}" required pattern="[a-z][a-z0-9_]+" minlength="2" maxlength="49"><p class="mt-2 text-xs text-slate-500">{=t('小写字母、数字和下划线；保存后用于 URL 与接口。')}</p></div>
+                    <div><label class="block text-sm font-semibold text-slate-800" for="label">{=t('显示名称')}</label><input class="mt-2 block w-full" id="label" name="label" type="text" value="{$definition['label'] ?? ''}" required></div>
+                </div>
+                <div class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4"><label class="admin-choice admin-choice--compact text-sm font-semibold"><input name="hierarchical" type="checkbox" value="1"{if !empty($definition['hierarchical'])} checked{/if}><span>{=t('允许设置上级内容')}</span></label><p class="mt-3 text-sm text-slate-600">{=t('开启后，每条内容都可以选择一条上级内容，形成“父级 → 子级”的目录结构。例如“产品分类 → 具体产品”或“公司介绍 → 团队成员”。关闭后，所有内容保持平级，适合文章、新闻等不需要分层管理的内容。')}</p></div>
+            </section>
+
+            <section class="space-y-6 pt-6" id="type-panel-fields" role="tabpanel" aria-labelledby="type-tab-fields" x-show="tab === 'fields'" @invalid.capture="tab = 'fields'">
+                <div class="flex flex-wrap items-start justify-between gap-4">
+                    <div><h2>{=t('字段')}</h2><p class="mt-1 text-sm text-slate-500">{=t('添加字段后，它们会自动出现在此内容类型的编辑表单中。')}</p>{if $hasProtectedFields}<p class="mt-2 text-sm text-blue-700">{=t('内置字段由系统维护，不在这里显示，也不能修改或删除。')}</p>{/if}</div>
+                    <button class="admin-button inline-flex items-center gap-2 px-4 py-2.5" type="button" @click="addField()"><i class="ti ti-plus" aria-hidden="true"></i>{=t('添加字段')}</button>
+                </div>
+                <div class="space-y-4">
+                    <template x-for="(field, index) in fields" :key="field.key">
+                        <article class="rounded-xl border border-slate-200 bg-slate-50 p-5">
+                            <div class="flex items-center justify-between gap-4"><div class="flex items-center gap-2"><h3 data-unnamed="{=t('fields.unnamed')}" x-text="field.label || field.name || $el.dataset.unnamed"></h3><span class="rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700" x-show="field.protected">{=t('系统字段')}</span></div><button class="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50" type="button" x-show="!field.protected" @click="removeField(index)"><i class="ti ti-trash" aria-hidden="true"></i><span class="ml-1">{=t('删除')}</span></button></div>
+                            <div class="mt-5 grid gap-5 md:grid-cols-3">
+                                <div><label class="block text-sm font-semibold text-slate-800">{=t('字段标识')}</label><input class="mt-2 block w-full" type="text" x-model="field.name" :name="'fields[' + index + '][name]'" :readonly="field.protected" required pattern="[a-z][a-z0-9_]+" minlength="2" maxlength="49"></div>
+                                <div><label class="block text-sm font-semibold text-slate-800">{=t('显示名称')}</label><input class="mt-2 block w-full" type="text" x-model="field.label" :name="'fields[' + index + '][label]'" required></div>
+                                <div><label class="block text-sm font-semibold text-slate-800">{=t('字段类型')}</label><select class="mt-2 block w-full" x-model="field.type" :name="'fields[' + index + '][type]'"><optgroup label="{=t('fields.basic')}"><option value="text">{=t('单行文本')}</option><option value="sku">{=t('fields.sku')}</option><option value="textarea">{=t('多行文本')}</option><option value="number">{=t('数字')}</option><option value="range">{=t('范围滑块')}</option><option value="boolean">{=t('单个复选框（是/否）')}</option><option value="switch">{=t('开关')}</option><option value="color">{=t('颜色')}</option><option value="json">{=t('fields.json')}</option></optgroup><optgroup label="{=t('fields.date_contact')}"><option value="date">{=t('日期')}</option><option value="datetime">{=t('日期时间')}</option><option value="time">{=t('时间')}</option><option value="month">{=t('月份')}</option><option value="week">{=t('周')}</option><option value="url">{=t('链接')}</option><option value="email">{=t('邮箱')}</option><option value="phone">{=t('电话')}</option></optgroup><optgroup label="{=t('fields.choices')}"><option value="select">{=t('下拉选择')}</option><option value="searchable_select">{=t('可搜索选择')}</option><option value="radio">{=t('单选')}</option><option value="checkbox_group">{=t('多选框组（多个选项）')}</option><option value="tags">{=t('标签')}</option></optgroup><optgroup label="{=t('fields.content_media')}"><option value="body">{=t('内容正文')}</option><option value="file">{=t('文件')}</option><option value="files">{=t('多个文件')}</option><option value="image">{=t('图片')}</option><option value="images">{=t('多张图片')}</option></optgroup></select><p class="mt-2 text-xs text-slate-500" x-show="field.type === 'boolean'">{=t('保存单个真/假值，例如“是否置顶”。')}</p><p class="mt-2 text-xs text-slate-500" x-show="field.type === 'checkbox_group'">{=t('保存多个选中的选项，必须在下方配置选项。')}</p></div>
+                            </div>
+                            <template x-if="field.type === 'range'"><div class="mt-5 grid gap-5 md:grid-cols-3"><div><label class="block text-sm font-semibold text-slate-800">{=t('最小值')}</label><input class="mt-2 block w-full" type="number" x-model="field.rangeMin" :name="'fields[' + index + '][rangeMin]'" required></div><div><label class="block text-sm font-semibold text-slate-800">{=t('最大值')}</label><input class="mt-2 block w-full" type="number" x-model="field.rangeMax" :name="'fields[' + index + '][rangeMax]'" required></div><div><label class="block text-sm font-semibold text-slate-800">{=t('步长')}</label><input class="mt-2 block w-full" type="number" min="0.000001" x-model="field.rangeStep" :name="'fields[' + index + '][rangeStep]'" required></div></div></template>
+                            <template x-if="['select', 'searchable_select', 'radio', 'checkbox_group'].includes(field.type)"><div class="mt-5"><label class="block text-sm font-semibold text-slate-800">{=t('选项')}</label><textarea class="mt-2 block w-full" rows="4" x-model="field.optionsText" :name="'fields[' + index + '][optionsText]'" placeholder="{=t('value | 显示名称&#10;another-value | 另一个选项')}" required></textarea><p class="mt-2 text-xs text-slate-500">{=t('必填。每行一个选项，使用“值 | 显示名称”分隔。')}</p></div></template>
+                            <div class="mt-5 flex flex-wrap gap-3"><label class="admin-choice admin-choice--compact text-sm font-medium"><input type="checkbox" value="1" x-model="field.required" :name="'fields[' + index + '][required]'"><span>{=t('必填')}</span></label><label class="admin-choice admin-choice--compact text-sm font-medium"><input type="checkbox" value="1" x-model="field.translatable" :name="'fields[' + index + '][translatable]'"><span>{=t('可翻译')}</span></label><label class="admin-choice admin-choice--compact text-sm font-medium" x-show="field.type === 'body'" x-cloak><input type="checkbox" value="1" x-model="field.allowHtmlDocument" :name="'fields[' + index + '][allowHtmlDocument]'"><span>{=t('允许完整 HTML 页面')}</span></label></div>
+                        </article>
+                    </template>
+                    <div class="rounded-xl border border-dashed border-slate-300 px-5 py-8 text-center text-sm text-slate-500" x-show="fields.length === 0">{=t('暂未添加字段。点击“添加字段”开始配置。')}</div>
+                </div>
+            </section>
+            <section class="space-y-6 pt-6" id="type-panel-presentation" role="tabpanel" aria-labelledby="type-tab-presentation" x-show="tab === 'presentation'" @invalid.capture="tab = 'presentation'">
+                <div><h2>{=t('前台展示')}</h2><p class="mt-2 text-slate-500">{=t('详情页展示一条内容，列表页展示此类型已发布的内容。')}</p></div>
+                <fieldset class="space-y-6 rounded-lg border p-5"><legend class="px-2 font-semibold">{=t('详情页')}</legend>
+                    <div><label class="block font-medium" for="url-pattern">{=t('详情 URL 规则')}</label><input class="mt-2 block w-full" id="url-pattern" name="urlPattern" value="{$definition['urlPattern']}" required><p class="mt-2 text-sm text-slate-500">{=t('例如 /blog/&#123;slug&#125;。修改路径后，旧链接需另行配置重定向。')}</p></div>
+                    <div><label class="block font-medium" for="default-template">{=t('默认详情模板')}</label><select class="mt-2 block w-full" id="default-template" name="defaultTemplate" required>
+                        {var $selectedDetail = $definition['defaultTemplate'] ?? 'content-detail'}
+                        {if !isset(($detailTemplates ?? [])[$selectedDetail])}<option value="" selected>{=t('请选择当前主题的详情模板')}</option>{/if}
+                        {foreach ($detailTemplates ?? []) as $handle => $file}<option value="{$handle}" selected="{$selectedDetail === $handle}">{$file}</option>{/foreach}
+                    </select><p class="mt-2 text-sm text-slate-500">{=t('单条内容可选择继承此设置，或覆盖为另一详情模板。')}</p></div>
+                </fieldset>
+                <fieldset class="space-y-6 rounded-lg border p-5" x-data="{ enabled: {=!empty($definition['listEnabled']) ? 'true' : 'false'} }"><legend class="px-2 font-semibold">{=t('列表页')}</legend>
+                    <input type="hidden" name="listEnabled" value="0">
+                    <label class="admin-choice"><input type="checkbox" name="listEnabled" value="1" checked="{!empty($definition['listEnabled'])}" x-model="enabled">{=t('启用类型列表页')}</label>
+                    <div class="space-y-6" x-show="enabled">
+                        <div><label class="block font-medium" for="list-path">{=t('列表路径')}</label><input class="mt-2 block w-full" id="list-path" name="listPath" value="{$definition['listPath'] ?? ''}" placeholder="{=t('例如 /products')}" :required="enabled"><p class="mt-2 text-sm text-slate-500">{=t('必须是独立路径，不含占位符。列表路径优先于详情匹配，请避免占用现有页面地址。')}</p></div>
+                        <div><label class="block font-medium" for="list-template">{=t('列表模板')}</label><select class="mt-2 block w-full" id="list-template" name="listTemplate" :required="enabled">
+                            {var $selectedList = $definition['listTemplate'] ?? 'content-list'}
+                            {if !isset(($listTemplates ?? [])[$selectedList])}<option value="">{=t('请选择当前主题的列表模板')}</option>{/if}
+                            {foreach ($listTemplates ?? []) as $handle => $file}<option value="{$handle}" selected="{$selectedList === $handle}">{$file}</option>{/foreach}
+                        </select></div>
+                        <div><label class="block font-medium" for="per-page">{=t('每页数量')}</label><input class="mt-2 block w-full" id="per-page" type="number" min="1" max="100" name="perPage" value="{$definition['perPage'] ?? 12}" required></div>
+                    </div>
+                </fieldset>
+            </section>
+            <section class="space-y-6 pt-6" id="type-panel-taxonomies" role="tabpanel" aria-labelledby="type-tab-taxonomies" x-show="tab === 'taxonomies'">
+                <div><h2>{=t('分类法')}</h2><p class="mt-2 text-slate-500">{=t('选择此内容类型使用的词汇表，例如产品使用品牌和型号。标签也是一个词汇表，由有权限的用户维护。')}</p></div>
+                {foreach $taxonomyGroups as $group}
+                    {var $binding = $definition['taxonomies'][$group['handle']] ?? []}
+                    <fieldset class="rounded-lg border p-4 space-y-6">
+                        <legend class="px-2 font-semibold">{$group['label']}</legend>
+                        <input type="hidden" name="taxonomies[{$group['handle']}][enabled]" value="0">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <label class="admin-choice"><input type="checkbox" name="taxonomies[{$group['handle']}][enabled]" value="1"{if $binding && ($binding['enabled'] ?? true)} checked{/if}>{=t('启用此词汇表')}</label>
+                            <label>{=t('选择方式')} <select name="taxonomies[{$group['handle']}][multiple]"><option value="0">{=t('单选')}</option><option value="1"{if !empty($binding['multiple'])} selected{/if}>{=t('多选')}</option></select></label>
+                            <label class="admin-choice"><input type="checkbox" name="taxonomies[{$group['handle']}][required]" value="1"{if !empty($binding['required'])} checked{/if}>{=t('必填')}</label>
+                        </div>
+                    </fieldset>
+                {else}<p class="text-slate-500">{=t('还没有词汇表。请先到')}<a class="text-blue-700" href="{route('admin.taxonomies.index')}">{=t('分类法')}</a>{=t('创建。')}</p>{/foreach}
+            </section>
+            <div class="flex justify-end border-t pt-5"><button class="admin-button px-5 py-2.5" type="submit">{=t('保存内容类型')}</button></div>
+        </form>
+    {/if}
+</section>
+{/block}
+
+{block scripts}
+<script n:syntax="off">
+document.addEventListener('alpine:init', () => {
+    Alpine.data('contentTypeEditor', (initialFields) => ({
+        tab: 'basic',
+        fields: initialFields.map((field, index) => ({
+            key: index + '-' + Date.now(),
+            name: field.name || '',
+            label: field.label || '',
+            type: field.type || 'text',
+            required: Boolean(field.required),
+            translatable: Boolean(field.translatable),
+            allowHtmlDocument: Boolean(field.allowHtmlDocument),
+            optionsText: field.optionsText || '',
+            rangeMin: field.rangeMin ?? 0,
+            rangeMax: field.rangeMax ?? 100,
+            rangeStep: field.rangeStep ?? 1,
+        })),
+        addField() {
+            this.fields.push({ key: `${Date.now()}-${this.fields.length}`, name: '', label: '', type: 'text', required: false, translatable: false, allowHtmlDocument: false, optionsText: '', rangeMin: 0, rangeMax: 100, rangeStep: 1 });
+        },
+        removeField(index) {
+            this.fields.splice(index, 1);
+        },
+    }));
+});
+</script>
+{/block}

@@ -1,0 +1,6 @@
+<div>
+    <label class="block text-sm font-semibold text-slate-800" for="field-{$field['name']}">{$field['label']}{if $field['required']}<span class="ml-1 text-red-500" aria-hidden="true">*</span>{/if}</label>
+    <input class="mt-2 block w-full border bg-white px-3 py-2.5 text-slate-900 placeholder:text-slate-400" id="field-{$field['name']}" name="{$field['inputName']}" type="text" value="{$field['value'] ?? ''}" placeholder="{=t('标签之间用逗号分隔')}"{if $field['required']} required{/if}>
+    <p class="mt-2 text-xs text-slate-500">{=t('输入后将保存为去重的标签列表。')}</p>
+    {ifset $field['help']}<p class="mt-2 text-xs text-slate-500">{$field['help']}</p>{/ifset}
+</div>

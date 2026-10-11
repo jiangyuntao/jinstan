@@ -1,0 +1,9 @@
+{extends '../layouts/default.jst'}
+{block content}
+<article class="{block detailClass}detail{/block}">
+    {if hasComponent('breadcrumb')}{=component('breadcrumb', [], $content, $translation)}{/if}
+    <header class="detail-header"><h1>{$translation->title}</h1>{if $translation->excerpt}<p>{$translation->excerpt}</p>{/if}</header>
+    {include '../partials/content-fields.jst', field_items: $field_items}
+    {block related}{/block}
+</article>
+{/block}

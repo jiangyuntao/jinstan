@@ -1,0 +1,50 @@
+{extends 'layout.jst'}
+
+{block content}
+<p class="text-sm text-slate-500">{=t('检查数据库状态、执行优化并管理备份。')}</p>
+
+<div class="mt-6 grid gap-4 sm:grid-cols-3">
+    <div class="rounded-xl border bg-white p-5"><p class="text-sm text-slate-500">{=t('驱动')}</p><p class="mt-2 font-semibold">{$driver}</p></div>
+    <div class="rounded-xl border bg-white p-5"><p class="text-sm text-slate-500">{=t('已执行迁移')}</p><p class="mt-2 text-2xl font-semibold">{$migrations}</p></div>
+    <div class="rounded-xl border bg-white p-5"><p class="text-sm text-slate-500">{=t('完整性')}</p><p class="mt-2 font-semibold">{$integrity}</p></div>
+</div>
+
+<section class="mt-6 rounded-xl border bg-white p-6" id="backups">
+    <h2 class="font-semibold">{=t('维护操作')}</h2>
+    <div class="mt-4 flex flex-wrap gap-3">
+        <form method="post" action="{route('admin.database.check')}"><input type="hidden" name="_token" value="{$csrfToken}"><button class="admin-button px-4 py-2 text-sm" type="submit">{=t('检查数据库')}</button></form>
+        <form method="post" action="{route('admin.database.optimize')}" data-confirm-title="{=t('优化数据库？')}" data-confirm-message="{=t('优化会在数据库上执行维护操作，期间可能短暂影响性能。')}" data-confirm-action="{=t('开始优化')}"><input type="hidden" name="_token" value="{$csrfToken}"><button class="admin-button px-4 py-2 text-sm" type="submit">{=t('优化数据库')}</button></form>
+        <form method="post" action="{route('admin.database.cleanup')}" data-confirm-title="{=t('清理无效数据？')}" data-confirm-message="{=t('将删除指向自身、会形成循环的 Redirect 记录。')}" data-confirm-action="{=t('开始清理')}"><input type="hidden" name="_token" value="{$csrfToken}"><button class="admin-button px-4 py-2 text-sm" type="submit">{=t('清理无效数据')}</button></form>
+        {if $sqlite}<form method="post" action="{route('admin.database.backup')}"><input type="hidden" name="_token" value="{$csrfToken}"><button class="admin-button inline-flex items-center gap-2 px-4 py-2 text-sm" type="submit"><i class="ti ti-database-export" aria-hidden="true"></i>{=t('创建备份')}</button></form>{/if}
+    </div>
+
+    <div class="mt-6 border-t border-slate-200 pt-6">
+        <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+            <div><h3 class="font-semibold">{=t('备份历史')}</h3><p class="mt-1 text-sm text-slate-500">{=t('backup.total', ['count' => $backupTotal])}</p></div>
+        </div>
+        {if !$sqlite}<div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800">{=t('当前数据库驱动不支持内置备份。请使用数据库官方备份工具。')}</div>{/if}
+        <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                <thead class="bg-slate-50 text-left text-xs font-semibold text-slate-500"><tr><th class="px-5 py-3">{=t('备份标识')}</th><th class="px-5 py-3">{=t('创建时间')}</th><th class="px-5 py-3">SHA-256</th><th class="px-5 py-3 text-center">{=t('操作')}</th></tr></thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700">
+                    {foreach $backups as $backup}
+                        <tr class="hover:bg-slate-50"><td class="px-5 py-4 font-medium">{$backup['id']}</td><td class="px-5 py-4 text-slate-500">{$backup['createdAt']}</td><td class="max-w-md truncate px-5 py-4 font-mono text-xs text-slate-500" title="{$backup['hash']}">{$backup['hash']}</td><td class="px-5 py-4 text-center"><form method="post" action="{route('admin.database.backups.delete', ['id' => $backup['id']])}" data-confirm-title="{=t('删除此备份？')}" data-confirm-message="{=t('备份文件将被永久删除，无法恢复。')}" data-confirm-action="{=t('删除备份')}"><input type="hidden" name="_token" value="{$csrfToken}"><button class="inline-flex items-center gap-1 font-medium text-red-600 hover:text-red-800" type="submit"><i class="ti ti-trash" aria-hidden="true"></i>{=t('删除')}</button></form></td></tr>
+                    {else}
+                        <tr><td class="px-5 py-10 text-center text-slate-500" colspan="4">{=t('暂无备份。')}</td></tr>
+                    {/foreach}
+                </tbody>
+            </table>
+        </div>
+        {if $backupPages > 1}
+            <nav class="mt-4 flex items-center justify-between text-sm" aria-label="{=t('备份历史分页')}">
+                <span class="text-slate-500">{=t('pagination.page', ['page' => $backupPage, 'pages' => $backupPages])}</span>
+                <div class="flex gap-2">
+                    {if $backupPage > 1}<a class="rounded-lg border border-slate-200 px-3 py-2 font-medium hover:bg-slate-50" href="{route('admin.database.index', ['backup_page' => $backupPage - 1])}#backups">{=t('上一页')}</a>{/if}
+                    {if $backupPage < $backupPages}<a class="rounded-lg border border-slate-200 px-3 py-2 font-medium hover:bg-slate-50" href="{route('admin.database.index', ['backup_page' => $backupPage + 1])}#backups">{=t('下一页')}</a>{/if}
+                </div>
+            </nav>
+        {/if}
+    </div>
+</section>
+
+{/block}

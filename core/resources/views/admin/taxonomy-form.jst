@@ -1,0 +1,24 @@
+{extends 'layout.jst'}
+{block content}
+<p class="text-sm text-slate-500">{if $deleting}{=t('taxonomy.delete_help')}{elseif $isTerm}{=t('taxonomy.edit_help', ['name' => $group['label']])}{else}{=t('taxonomy.group_help')}{/if}</p>
+{if $sourceReference}<aside class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-5"><div class="flex justify-between"><h2 class="font-semibold">{=t('原文参考')}</h2><span>{$sourceReference['locale']}</span></div><dl class="mt-3 grid gap-3 md:grid-cols-2"><div><dt class="text-xs text-amber-800">{=t('名称')}</dt><dd>{$sourceReference['name']}</dd></div><div><dt class="text-xs text-amber-800">{=t('URL 别名')}</dt><dd>{$sourceReference['slug']}</dd></div></dl></aside>{/if}
+<section class="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+{if $error !== null}<div class="mb-6 rounded-lg bg-red-50 p-4 text-red-700" role="alert">{$error}</div>{/if}
+<form class="space-y-6" method="post">
+<input type="hidden" name="_token" value="{$csrfToken}">
+<input type="hidden" name="locale" value="{$locale}">
+{if $isTerm && !$deleting}<div><label class="block font-medium" for="term-locale">{=t('内容语言')}</label><select class="mt-2 block w-full" id="term-locale" onchange="window.location.search = new URLSearchParams({ locale: this.value }).toString()">{foreach $locales as $code => $label}<option value="{$code}" selected="{$code === $locale}">{$label} ({$code})</option>{/foreach}</select></div>{/if}
+{if $deleting}
+<h2>{=t('taxonomy.delete_title', ['name' => $isTerm ? $values['name'] : $values['label']])}</h2>
+{if $isTerm}<p>{=t('taxonomy.delete_term_impact', ['count' => $values['content_count']])}</p>{else}<p>{=t('taxonomy.delete_group_impact', ['count' => $values['term_count']])}</p>{/if}
+<label class="admin-choice"><input type="checkbox" name="confirm" value="yes" required>{=$isTerm ? t('taxonomy.confirm_term') : t('taxonomy.confirm_group')}</label>
+{elseif $isTerm}
+<div><label class="block font-medium" for="term-name">{=t('名称')}</label><input class="mt-2 block w-full" id="term-name" name="name" value="{$values['name']}" maxlength="190" required></div>
+<div><label class="block font-medium" for="term-slug">{=t('URL 别名')}</label><input class="mt-2 block w-full" id="term-slug" name="slug" value="{$values['slug']}" maxlength="190" aria-describedby="slug-help" required><p id="slug-help" class="mt-2 text-sm text-slate-500">{=t('当前语言内保持唯一；修改后，引用旧别名的链接可能需要同步调整。')}</p></div>
+{else}
+<div><label class="block font-medium" for="taxonomy-label">{=t('词汇表名称')}</label><input class="mt-2 block w-full" id="taxonomy-label" name="label" value="{$values['label']}" maxlength="100" required></div>
+<div><label class="block font-medium" for="taxonomy-handle">{=t('固定标识')}</label><input class="mt-2 block w-full" id="taxonomy-handle" name="handle" value="{$values['handle']}" maxlength="100" required readonly="{$editing}" aria-describedby="handle-help"><p id="handle-help" class="mt-2 text-sm text-slate-500">{=t('以小写字母开头，可包含数字和下划线。创建后不可修改，以保持内容类型绑定稳定。')}</p></div>
+{/if}
+{include 'partials/form-actions.jst', submitLabel: $deleting ? t('admin.confirm_delete') : t('保存'), cancelUrl: $backUrl}
+</form></section>
+{/block}

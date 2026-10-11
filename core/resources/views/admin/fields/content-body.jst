@@ -1,0 +1,15 @@
+<div class="content-body-editor">
+    <label class="block text-sm font-semibold text-slate-800">{$field['label']}</label>
+    <input name="{$field['inputName']}[format]" type="hidden" value="{$field['value']['format']}" data-body-format>
+    {if $field['allowHtmlDocument']}<div class="mt-3 flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3" x-data="{ enabled: {$field['value']['format'] === 'html_document' ? 'true' : 'false'} }"><div><label class="block cursor-pointer text-sm font-semibold text-slate-800" for="field-{$field['name']}-html">{=t('完整 HTML 页面')}</label><p class="mt-1 text-xs text-slate-500">{=t('开启后不套用 Theme，可使用 HTML、样式、脚本及受支持的 CMS 模板标签。')}</p></div><label class="relative inline-flex cursor-pointer items-center" for="field-{$field['name']}-html"><input class="peer sr-only" id="field-{$field['name']}-html" type="checkbox" x-model="enabled" data-html-toggle{if $field['value']['format'] === 'html_document'} checked{/if}><span class="h-6 w-11 rounded-full bg-slate-300 transition peer-checked:bg-blue-600 after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow-sm after:transition peer-checked:after:translate-x-5"></span></label></div>{/if}
+    <div class="mt-3" data-markdown-panel>
+        <textarea class="block w-full border bg-white px-3 py-2.5 font-mono" id="field-{$field['name']}-markdown" name="{$field['inputName']}[value]" rows="{$field['rows']}" data-markdown-source>{$field['value']['value']}</textarea>
+        <p class="mt-2 text-xs text-slate-500">{=t('支持 Markdown；内容会在前台安全渲染。')}</p>
+    </div>
+    <div class="mt-3 hidden" data-html-panel>
+        <textarea class="hidden" id="field-{$field['name']}-html" rows="{$field['rows']}" data-html-source disabled>{$field['value']['value']}</textarea>
+        <div class="mt-2 code-editor" data-code-editor data-code-language="markup" data-input="field-{$field['name']}-html"></div>
+        <div class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{=t('完整 HTML 页面可包含样式与脚本，仅 `system.manage` 用户可以保存。')}</div>
+        <iframe class="mt-3 hidden min-h-[32rem] w-full rounded-lg border bg-white" sandbox="allow-scripts" data-html-preview title="{=t('HTML 预览')}"></iframe>
+    </div>
+</div>

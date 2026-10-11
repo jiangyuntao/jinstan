@@ -1,0 +1,17 @@
+{extends '../layouts/default.jst'}
+{block content}
+<section class="listing-shell">
+    <header class="listing-head"><h1>{$type->label}</h1></header>
+    <div class="product-grid">
+        {foreach $items as $item}
+        <article class="product-card">
+            {if !empty($item['data']['cover_image'])}<a href="{$item['url']}" tabindex="-1" aria-hidden="true"><img src="{$item['data']['cover_image']}" alt="" loading="lazy"></a>{else}<a class="product-placeholder" href="{$item['url']}" tabindex="-1" aria-hidden="true"><span>J</span></a>{/if}
+            <h2><a href="{$item['url']}">{$item['title']}</a></h2>
+            {if !empty($item['data']['sku'])}<p class="price">{$item['data']['sku'][0]['price']}</p>{/if}
+            {if $item['excerpt']}<p>{$item['excerpt']}</p>{/if}
+        </article>
+        {else}<p class="empty-state">暂时没有已发布的产品。</p>{/foreach}
+    </div>
+    {include '../partials/list-pagination.jst', unit: '件'}
+</section>
+{/block}

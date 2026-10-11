@@ -1,0 +1,22 @@
+{extends '../layouts/default.jst'}
+{block content}
+<section class="hero">
+    <div class="hero-copy">
+        <h1>{$site['name']}</h1>
+        {if $site['tagline']}<p class="hero-description">{$site['tagline']}</p>{elseif $site['description']}<p class="hero-description">{$site['description']}</p>{/if}
+    </div>
+    {if $sections}<nav class="hero-links" aria-label="内容分类">{foreach $sections as $section}<a href="{$section['url']}">{$section['type']->label} →</a>{/foreach}</nav>{/if}
+</section>
+<div class="home-sections">
+    {foreach $sections as $section}
+        <section class="home-section">
+            <header class="section-title"><h2>{$section['type']->label}</h2><a href="{$section['url']}" aria-label="查看全部 {$section['type']->label}">查看全部 ↗</a></header>
+            <div class="feed-list">
+                {foreach $section['items'] as $item}
+                <article class="feed-row"><h3><a href="{$item['url']}">{$item['title']}</a></h3><span class="row-arrow" aria-hidden="true">›</span></article>
+                {else}<p class="empty-state">暂时没有已发布的内容。</p>{/foreach}
+            </div>
+        </section>
+    {/foreach}
+</div>
+{/block}

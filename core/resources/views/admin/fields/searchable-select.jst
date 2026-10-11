@@ -1,0 +1,16 @@
+{var $selectedValue = (string) ($field['value'] ?? '')}
+{var $selectedLabel = $field['options'][$selectedValue] ?? ''}
+<div x-data="{ open: false, query: '', label: '' }" x-init="label = $refs.value.dataset.label" @click.outside="open = false">
+    <label class="block text-sm font-semibold text-slate-800" for="field-{$field['name']}-search">{$field['label']}{if !empty($field['required'])}<span class="ml-1 text-red-500" aria-hidden="true">*</span>{/if}</label>
+    <input name="{$field['inputName']}" type="hidden" value="{$selectedValue}" data-label="{$selectedLabel}" x-ref="value">
+    <button class="field-select field-select-trigger mt-2 flex w-full items-center justify-between text-left" type="button" @click="open = !open; $nextTick(() => $refs.search.focus())" :aria-expanded="open.toString()"><span data-placeholder="{=t('fields.select_prompt')}" x-text="label || $el.dataset.placeholder">{$selectedLabel ?: t('fields.select_prompt')}</span><svg class="h-4 w-4 text-slate-500 transition" :class="open ? 'rotate-180' : ''" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg></button>
+    <div class="relative" x-cloak x-show="open">
+        <div class="field-select-menu absolute z-20 mt-1 w-full border p-2">
+            <input class="field-select block w-full bg-white px-3 py-2 text-sm" id="field-{$field['name']}-search" type="search" placeholder="{=t('搜索选项')}" x-model="query" x-ref="search">
+            <div class="mt-2 max-h-56 overflow-y-auto" role="listbox">
+                {foreach $field['options'] as $value => $optionLabel}<button class="field-select-option block w-full px-3 py-2 text-left text-sm" type="button" data-value="{$value}" data-label="{$optionLabel}" x-show="!query || $el.textContent.toLowerCase().includes(query.toLowerCase())" @click="$refs.value.value = $el.dataset.value; $refs.value.dispatchEvent(new Event('change', { bubbles: true })); label = $el.dataset.label; open = false; query = ''"{if $selectedValue === (string) $value} aria-selected="true"{/if}>{$optionLabel}</button>{/foreach}
+            </div>
+        </div>
+    </div>
+    {ifset $field['help']}<p class="mt-2 text-xs text-slate-500">{$field['help']}</p>{/ifset}
+</div>

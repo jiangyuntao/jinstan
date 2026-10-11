@@ -1,0 +1,32 @@
+{extends 'layout.jst'}
+{block content}
+<p class="text-sm text-slate-500">{=t('启用和停用会执行 Plugin 生命周期；停用后的路由和服务在下一次请求重新启动时不再注册。')}</p>
+<section class="mt-6 space-y-4">
+    {foreach $plugins as $plugin}
+        <article class="rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div><strong>{$plugin['name']}</strong><p class="mt-1 text-sm text-slate-500">{=t('作者')}：{$plugin['author']} · {=t('admin.version', ['version' => $plugin['version']])}{if !$plugin['installed']} · {=t('已卸载')}{/if}</p></div>
+                <div class="flex items-center gap-4">
+                    {if $plugin['installed'] && $plugin['settings']}<a class="font-medium text-blue-700 hover:text-blue-900" href="{route('admin.plugins.settings', ['name' => $plugin['name']])}">{=t('配置')}</a>{/if}
+                    {if $plugin['installed']}
+                        <form method="post" action="{route('admin.plugins.uninstall', ['name' => $plugin['name']])}" data-confirm-title="{=t('卸载插件？')}" data-confirm-message="{=t('卸载“{name}”将停用插件，并由插件清理其数据和设置。插件文件仍会保留。', ['name' => $plugin['name']])}" data-confirm-action="{=t('卸载插件')}">
+                            <input type="hidden" name="_token" value="{$csrfToken}">
+                            <button class="inline-flex items-center gap-1 font-medium text-red-600 hover:text-red-800" type="submit"><i class="ti ti-trash" aria-hidden="true"></i>{=t('卸载')}</button>
+                        </form>
+                    {/if}
+                    {if $plugin['installed']}
+                        <form method="post" action="{route('admin.plugins.toggle', ['name' => $plugin['name']])}"{if $plugin['enabled']} data-confirm-title="{=t('plugins.disable_title', ['name' => $plugin['name']])}" data-confirm-message="{=t('该插件的路由和服务将在下次请求时不再注册。')}" data-confirm-action="{=t('停用插件')}" data-confirm-reset-on-cancel="true"{/if}>
+                            <input type="hidden" name="_token" value="{$csrfToken}">
+                            {include 'fields/switch.jst', field: ['name' => 'plugin-' . $plugin['name'], 'inputName' => 'enabled', 'label' => t('状态'), 'value' => $plugin['enabled'], 'onLabel' => t('已启用'), 'offLabel' => t('已停用'), 'submitOnChange' => true]}
+                        </form>
+                    {else}
+                        <form method="post" action="{route('admin.plugins.toggle', ['name' => $plugin['name']])}"><input type="hidden" name="_token" value="{$csrfToken}"><input type="hidden" name="enabled" value="1"><button class="font-medium text-blue-700 hover:text-blue-900" type="submit">{=t('重新安装')}</button></form>
+                    {/if}
+                </div>
+            </div>
+        </article>
+    {else}
+        <div class="rounded-xl border border-slate-200 bg-white px-5 py-10 text-center text-slate-500 shadow-sm">{=t('尚未发现插件。')}</div>
+    {/foreach}
+</section>
+{/block}

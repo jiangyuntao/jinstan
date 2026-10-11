@@ -1,0 +1,7 @@
+<div>
+    <label class="block text-sm font-semibold text-slate-800" for="field-{$field['name']}">{$field['label']}{if $field['required']}<span class="ml-1 text-red-500" aria-hidden="true">*</span>{/if}</label>
+    <select class="field-select mt-2 block w-full bg-white px-3 py-2.5 text-slate-900" id="field-{$field['name']}" name="{$field['inputName']}"{if $field['required']} required{/if}>
+        {foreach $field['options'] as $value => $label}<option value="{$value}"{if (string) $field['value'] === (string) $value} selected{/if}>{$label}</option>{/foreach}
+    </select>
+    {ifset $field['help']}<p class="mt-2 text-xs text-slate-500">{$field['help']}</p>{/ifset}
+</div>

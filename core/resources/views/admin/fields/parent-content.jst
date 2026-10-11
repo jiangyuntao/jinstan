@@ -1,0 +1,21 @@
+{var $selectedValue = (string) ($field['value'] ?? '')}
+{var $selectedLabel = $field['options'][$selectedValue] ?? ''}
+<script id="parent-content-{$field['name']}" type="application/json">{json_encode(['id' => $selectedValue, 'label' => $selectedLabel], \JSON_HEX_TAG | \JSON_HEX_AMP | \JSON_HEX_APOS | \JSON_HEX_QUOT)|noescape}</script>
+<div x-data="parentContentPicker(JSON.parse(document.getElementById('parent-content-{$field['name']}').textContent), '{$field['searchUrl']}')" @click.outside="open = false">
+    <label class="block text-sm font-semibold text-slate-800" for="field-{$field['name']}-search">{$field['label']}</label>
+    <input name="{$field['inputName']}" type="hidden" x-model="selectedId">
+    <div class="mt-2 flex items-start gap-2">
+        <div class="relative min-w-0 flex-1">
+            <input class="block w-full bg-white" id="field-{$field['name']}-search" type="search" placeholder="{=t('输入标题搜索内容')}" x-model="query" @focus="open = true" @input.debounce.250ms="search()" autocomplete="off">
+            <div class="field-select-menu absolute z-20 mt-1 w-full border p-2" x-cloak x-show="open">
+            <p class="px-3 py-2 text-xs text-slate-500" x-show="!query">{=t('输入标题关键词开始搜索。')}</p>
+            <p class="px-3 py-2 text-xs text-slate-500" x-show="loading">{=t('正在搜索…')}</p>
+            <p class="px-3 py-2 text-xs text-slate-500" x-show="query && !loading && items.length === 0">{=t('没有找到匹配内容。')}</p>
+            <div class="max-h-56 overflow-y-auto" role="listbox"><template x-for="item in items" :key="item.id"><button class="field-select-option block w-full px-3 py-2 text-left text-sm" type="button" @click="select(item)" x-text="item.title"></button></template></div>
+            </div>
+        </div>
+        <button class="admin-choice h-11 shrink-0 text-sm font-medium" type="button" x-cloak x-show="selectedId" @click="clear()">{=t('清除')}</button>
+    </div>
+    <p class="mt-2 text-sm text-blue-700" x-show="selectedId" data-selected="{=t('fields.selected')}" x-text="$el.dataset.selected.replace('{' + 'name}', () => selectedLabel)"></p>
+    {ifset $field['help']}<p class="mt-2 text-xs text-slate-500">{$field['help']}</p>{/ifset}
+</div>

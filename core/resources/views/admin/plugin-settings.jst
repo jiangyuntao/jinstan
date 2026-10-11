@@ -1,0 +1,20 @@
+{extends 'layout.jst'}
+{block headerActions}<a class="text-sm font-medium text-slate-600 hover:text-slate-950" href="{route('admin.plugins.index')}">← {=t('返回插件列表')}</a>{/block}
+{block content}
+<p class="text-sm text-slate-500">{$plugin['name']} · {=t('作者')}：{$plugin['author']}</p>
+<form class="mt-6 space-y-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm" method="post" action="{route('admin.plugins.settings.save', ['name' => $plugin['name']])}">
+    <input type="hidden" name="_token" value="{$csrfToken}">
+    {foreach $plugin['settings'] as $setting}
+        <div>
+            <label class="block text-sm font-medium text-slate-700" for="plugin-{$plugin['name']}-{$setting['key']}">{$setting['label']}</label>
+            {if $setting['type'] === 'json'}
+                <textarea class="mt-1 block w-full font-mono" id="plugin-{$plugin['name']}-{$setting['key']}" name="settings[{$setting['key']}]" rows="6">{$setting['value']}</textarea>
+            {else}
+                <input class="mt-1 block w-full" id="plugin-{$plugin['name']}-{$setting['key']}" name="settings[{$setting['key']}]" type="{$setting['type'] === 'url' ? 'url' : 'text'}" value="{$setting['value']}"{if $setting['required'] ?? false} required{/if}>
+            {/if}
+            {if $setting['help'] ?? null}<p class="mt-1 text-sm text-slate-500">{$setting['help']}</p>{/if}
+        </div>
+    {/foreach}
+    <div class="border-t border-slate-200 pt-5"><button class="admin-button px-4 py-2" type="submit">{=t('保存设置')}</button></div>
+</form>
+{/block}
